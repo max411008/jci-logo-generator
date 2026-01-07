@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (Share & Lock)</title>
+    <title>JCI Logo Generator (V3.1)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 全局字型與重置 */
@@ -82,7 +82,7 @@
         .btn-download:hover { background-color: #007bb5; }
         .btn-download:disabled { background-color: #ccc; box-shadow: none; cursor: not-allowed; }
 
-        /* --- 3. 預覽區 (嚴格鎖定) --- */
+        /* --- 3. 預覽區 (預設鎖定) --- */
         .preview-container { 
             position: relative; 
             width: 550px;       
@@ -95,20 +95,28 @@
             border-radius: 4px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
             
-            /* ★★★ 絕對鎖定：禁止任何滑鼠或觸控互動 ★★★ */
+            /* 預設鎖定，防止誤觸 */
             pointer-events: none; 
             user-select: none;
             -webkit-user-select: none;
         }
 
+        /* 當允許長按時，加入這個 class */
+        .preview-container.allow-touch {
+            pointer-events: auto !important;
+            user-select: auto !important;
+            -webkit-user-select: auto !important;
+            border: 2px dashed #0097D7; /* 藍色虛線框提示 */
+        }
+
         .logo-wrapper { position: relative; width: 100%; container-type: inline-size; }
         .logo-wrapper img { width: 100%; display: block; }
         
-        /* --- 品牌規範核心定位 (依照您提供的最終參數) --- */
+        /* --- 品牌規範核心定位 (V2.9 參數) --- */
         .chapter-name-wrapper {
             position: absolute;
-            top: 66.2%;       /* 最終確認參數 */
-            left: 11.8%;      /* 最終確認參數 */
+            top: 66.2%;
+            left: 11.8%;
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: bold;
             max-width: 72%;
@@ -116,14 +124,13 @@
         }
 
         .text-line { 
-            font-size: 8.0cqi;        /* 最終確認參數 */
+            font-size: 8.0cqi;
             line-height: 0.8;
             white-space: nowrap; 
-            letter-spacing: 0.005em;  /* 最終確認參數 */
+            letter-spacing: 0.005em; 
         }
 
-        /* Line 2 獨立間距 */
-        #chapterTextLine2 { margin-top: 2.6cqi; } /* 最終確認參數 */
+        #chapterTextLine2 { margin-top: 2.6cqi; }
 
         .hidden { display: none !important; }
         .text-jci-blue { color: #0097D7 !important; }
@@ -142,8 +149,21 @@
             background-color: #fff;
             border-top: 1px solid #eee;
         }
-        .footer strong { color: #0097D7; font-weight: bold; }
+        
         .footer-block { margin-bottom: 15px; } 
+
+        /* 超連結樣式優化 */
+        .footer-link {
+            color: #333; /* 預設深灰，不刺眼 */
+            text-decoration: none;
+            font-weight: bold;
+            border-bottom: 1px dotted #999; /* 點狀底線，暗示可點擊 */
+            transition: color 0.2s, border-bottom 0.2s;
+        }
+        .footer-link:hover {
+            color: #0097D7; /* JCI Blue */
+            border-bottom: 1px solid #0097D7;
+        }
 
         .copyright-warning { 
             margin-top: 20px; 
@@ -229,7 +249,7 @@
         </div>
         
         <div class="footer-block">
-            桃園市大園國際青年商會 2023年會長 林振暉 製作<br>
+            <a href="https://www.jcidayuan.site/" target="_blank" class="footer-link">桃園市大園國際青年商會</a> 2023年會長 林振暉 製作<br>
             Copyright &copy; 2026 Chenghui Lin. All rights reserved.
         </div>
 
@@ -240,6 +260,11 @@
     </div>
 
     <script>
+        // 判斷是否為 iOS (包含 Chrome on iOS)
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+
         window.onload = function() { changeLogoStyle(); };
 
         function changeLogoStyle() {
@@ -291,28 +316,28 @@
                     const fileName = `JCI_Logo_${chapterName}.png`;
                     const file = new File([blob], fileName, { type: 'image/png' });
 
-                    // --- ★★★ 優先策略：使用「系統分享」 (Navigator Share API) ★★★ ---
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    // --- 智慧判斷 ---
+                    // iPhone (Safari/Chrome) -> 優先嘗試分享選單
+                    if (isIOS()) {
                         try {
-                            // 呼叫手機原生的分享/儲存選單
-                            await navigator.share({
-                                files: [file],
-                                title: 'JCI Logo',
-                            });
-                            // 分享成功或使用者關閉選單，都視為流程結束
-                            btn.innerText = "下載圖片 / Save Image";
-                            btn.disabled = false;
-                            return;
+                            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                await navigator.share({
+                                    files: [file],
+                                    title: 'JCI Logo',
+                                });
+                                // 分享成功，結束
+                                btn.innerText = "下載圖片 / Save Image";
+                                btn.disabled = false;
+                                return;
+                            }
                         } catch (err) {
-                            console.log("Share API cancelled or failed", err);
-                            // 如果使用者取消分享，程式不做任何事，按鈕恢復即可
-                            btn.innerText = "下載圖片 / Save Image";
-                            btn.disabled = false;
-                            return;
+                            console.log("iOS Share cancelled or failed");
+                            // 如果分享失敗（例如 Chrome 擋住），繼續往下走，執行解鎖邏輯
                         }
                     }
 
-                    // --- 備用策略：如果不支援分享 (電腦版)，則走傳統下載 ---
+                    // --- 備用/Android 邏輯 ---
+                    // 1. 嘗試直接下載
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.download = fileName;
@@ -322,6 +347,14 @@
                     document.body.removeChild(link);
                     URL.revokeObjectURL(url);
                     
+                    // 2. ★ 關鍵步驟：不管上面有沒有成功，立刻解鎖圖片，允許長按 ★
+                    // 這是為了應付 iPhone Chrome 失敗的情況
+                    document.getElementById('previewBox').classList.add('allow-touch');
+                    
+                    if (isIOS()) {
+                        alert("✅ 圖片已生成！\n\n如果沒有彈出選項，請直接「長按」上方的圖片進行儲存。");
+                    }
+
                     btn.innerText = "下載圖片 / Save Image";
                     btn.disabled = false;
 
@@ -329,7 +362,8 @@
 
             } catch (err) {
                 console.error(err);
-                alert("生成失敗，請稍後再試。");
+                document.getElementById('previewBox').classList.add('allow-touch');
+                alert("生成失敗，請長按圖片儲存。");
                 btn.disabled = false;
             }
         }
