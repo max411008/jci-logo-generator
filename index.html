@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (V4.3 PC/Mobile)</title>
+    <title>JCI Logo Generator (V4.4 Guideline Check)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 全局字型與重置 */
@@ -66,6 +66,26 @@
         }
         input:focus, select:focus { border-color: #0097D7; outline: none; }
         
+        /* ★★★ 新增：警告訊息樣式 ★★★ */
+        .warning-msg {
+            display: none; /* 預設隱藏 */
+            color: #dc3545; /* 紅色 */
+            font-size: 13px;
+            font-weight: bold;
+            margin-top: 4px;
+            background-color: #ffe6e6;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ffcccc;
+            width: 100%;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .btn-download { 
             padding: 10px 24px; 
             font-size: 15px; 
@@ -94,13 +114,11 @@
             margin: 0 auto;
             border-radius: 4px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-            
             pointer-events: none; 
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* 生成模式：允許互動 (長按或右鍵) */
         .preview-container.generated-mode {
             pointer-events: auto !important;
             user-select: auto !important;
@@ -116,11 +134,7 @@
         .logo-wrapper { position: relative; width: 100%; container-type: inline-size; }
         .logo-wrapper img { width: 100%; display: block; }
         
-        #finalResultImg {
-            width: 100%;
-            display: none; 
-            border-radius: 4px;
-        }
+        #finalResultImg { width: 100%; display: none; border-radius: 4px; }
 
         /* --- 品牌規範核心定位 --- */
         .chapter-name-wrapper {
@@ -129,8 +143,12 @@
             left: 11.8%;
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: bold;
+            
+            /* ★ 關鍵設定：限制最大寬度為 72% (這正好是盾牌右緣的位置) ★ */
             max-width: 72%;
+            
             text-align: left;
+            overflow: visible; /* 讓 JS 可以偵測到實際寬度 */
         }
 
         .text-line { 
@@ -169,10 +187,7 @@
             border-bottom: 1px dotted #999; 
             transition: color 0.2s, border-bottom 0.2s;
         }
-        .footer-link:hover {
-            color: #0097D7; 
-            border-bottom: 1px solid #0097D7;
-        }
+        .footer-link:hover { color: #0097D7; border-bottom: 1px solid #0097D7; }
 
         .copyright-warning { 
             margin-top: 20px; 
@@ -206,6 +221,10 @@
         <div class="input-group">
             <label>分會名稱 (Line 1)</label>
             <input type="text" id="chapterInput1" value="Dayuan" oninput="updateLogo()">
+            <div id="lengthWarning" class="warning-msg">
+                ⚠️ 文字過長 (Point 4)！<br>
+                已超出盾牌右緣範圍，請將多餘文字移至第二行。
+            </div>
         </div>
         <div class="input-group">
             <label>分會名稱 (Line 2, 選填)</label>
@@ -267,12 +286,10 @@
     </div>
 
     <script>
-        // 判斷是否為行動裝置 (手機/平板)
         function isMobile() {
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
 
-        // 判斷是否為 iOS (為了限制解析度)
         function isIOS() {
             return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         }
@@ -307,6 +324,16 @@
             } else {
                 line2Div.classList.add('hidden');
             }
+
+            // ★★★ 智慧偵測：檢查是否超出 Point 4 (盾牌右緣) ★★★
+            // max-width 設為 72%。如果 scrollWidth (實際文字寬) 大於 clientWidth (容器限制寬)，代表溢出
+            var warningDiv = document.getElementById('lengthWarning');
+            if (line1Div.scrollWidth > line1Div.clientWidth) {
+                warningDiv.style.display = 'block'; // 顯示警告
+            } else {
+                warningDiv.style.display = 'none';  // 隱藏警告
+            }
+
             resetPreviewState();
         }
 
@@ -324,7 +351,6 @@
             btn.innerText = "處理中...";
             btn.disabled = true;
 
-            // iOS 安全倍率限制
             var finalScale = qualityScale * 2;
             if (isIOS() && finalScale > 7) {
                 finalScale = 7; 
@@ -350,13 +376,10 @@
                 
                 document.getElementById('previewBox').classList.add('generated-mode');
 
-                // ★★★ 核心修改：區分電腦與手機的提示語 ★★★
                 let msg = "";
                 if (isMobile()) {
-                    // 手機版提示
                     msg = "✅ 圖片已生成！\n\n請直接「長按」下方的圖片，並選擇「儲存到相簿」。\n(若需修改文字，輸入新內容即可恢復編輯模式)";
                 } else {
-                    // 電腦版提示
                     msg = "✅ 圖片已生成！\n\n請在下方的圖片上「按右鍵」，並選擇「另存圖片」來下載。\n(若需修改文字，輸入新內容即可恢復編輯模式)";
                 }
                 
