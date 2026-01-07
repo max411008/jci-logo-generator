@@ -3,164 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (V4.8 Final)</title>
+    <title>JCI Logo Generator (V7.1 Matched Filenames)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
     <style>
-        /* 全局字型與重置 */
+        /* 載入本地字體 */
         @font-face { font-family: 'Plus Jakarta Sans'; src: url('PlusJakartaSans-Bold.ttf') format('truetype'); font-weight: bold; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: #f8f9fa; 
-            margin: 0; 
-            padding: 0;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            min-height: 100vh;
-            color: #333;
+            background-color: #f8f9fa; margin: 0; padding: 0;
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh; color: #333;
         }
 
-        /* --- 1. App 頂部導航列 --- */
         .navbar {
-            width: 100%;
-            background-color: #0097D7;
-            color: white;
-            padding: 16px 0;
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            margin-bottom: 24px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            width: 100%; background-color: #0097D7; color: white;
+            padding: 16px 0; text-align: center; font-size: 20px; font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-bottom: 24px;
+            position: sticky; top: 0; z-index: 100;
         }
 
-        /* --- 2. 操作面板 --- */
         .controls { 
-            background: white; 
-            padding: 24px; 
-            border-radius: 16px; 
+            background: white; padding: 24px; border-radius: 16px; 
             box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
-            display: flex; 
-            gap: 16px; 
-            align-items: flex-end; 
-            margin-bottom: 24px; 
-            flex-wrap: wrap; 
-            justify-content: center; 
-            max-width: 800px;
-            width: 90%;
+            display: flex; gap: 16px; align-items: flex-end; 
+            margin-bottom: 24px; flex-wrap: wrap; justify-content: center; 
+            max-width: 800px; width: 90%;
         }
         
-        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-group { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 250px; }
         label { font-size: 13px; font-weight: 700; color: #555; margin-left: 2px; }
         input, select { 
-            padding: 10px 14px; 
-            font-size: 15px; 
-            border: 1px solid #e0e0e0; 
-            border-radius: 8px; 
-            min-width: 160px; 
-            background-color: #fdfdfd;
+            padding: 10px 14px; font-size: 15px; border: 1px solid #e0e0e0; 
+            border-radius: 8px; width: 100%; background-color: #fdfdfd;
             transition: border-color 0.2s;
         }
         input:focus, select:focus { border-color: #0097D7; outline: none; }
         
-        /* 雙語警告訊息樣式 */
         .warning-msg {
-            display: none; 
-            color: #dc3545; 
-            font-size: 13px;
-            line-height: 1.5;
-            margin-top: 6px;
-            background-color: #ffe6e6;
-            padding: 10px 12px;
-            border-radius: 6px;
-            border: 1px solid #ffcccc;
-            width: 100%;
+            display: none; color: #dc3545; font-size: 13px; line-height: 1.5;
+            margin-top: 6px; background-color: #ffe6e6; padding: 10px 12px;
+            border-radius: 6px; border: 1px solid #ffcccc; width: 100%;
             animation: fadeIn 0.3s ease-in-out;
         }
-        
-        .warning-divider {
-            border: 0;
-            border-top: 1px dashed #ffb3b3;
-            margin: 6px 0;
-        }
+        .warning-divider { border: 0; border-top: 1px dashed #ffb3b3; margin: 6px 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        /* 按鈕群組 */
+        .btn-group-vertical { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 250px; }
 
-        .btn-download { 
-            padding: 10px 24px; 
-            font-size: 15px; 
-            font-weight: bold; 
-            color: white; 
-            background-color: #0097D7; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            height: 42px; 
-            transition: background-color 0.2s;
-            box-shadow: 0 4px 10px rgba(0, 151, 215, 0.2);
+        .btn-base {
+            padding: 0 20px; font-size: 15px; font-weight: bold; color: white;
+            border: none; border-radius: 8px; cursor: pointer; height: 44px;
+            transition: filter 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%;
         }
-        .btn-download:hover { background-color: #007bb5; }
-        .btn-download:disabled { background-color: #ccc; box-shadow: none; cursor: not-allowed; }
+        .btn-base:hover { filter: brightness(1.1); }
+        .btn-base:disabled { background-color: #ccc !important; cursor: not-allowed; filter: none; }
 
-        /* --- 3. 預覽區 (編輯模式) --- */
+        .btn-png { background-color: #0097D7; box-shadow: 0 4px 10px rgba(0, 151, 215, 0.2); }
+        .btn-svg { background-color: #20c997; box-shadow: 0 4px 10px rgba(32, 201, 151, 0.2); }
+        .btn-eps { background-color: #6610f2; box-shadow: 0 4px 10px rgba(102, 16, 242, 0.2); }
+
         .preview-container { 
-            position: relative; 
-            width: 550px;       
-            padding: 20px; 
-            max-width: 95%; 
-            border: 1px solid #eee; 
-            background-color: #fff; 
-            box-sizing: border-box; 
-            margin: 0 auto;
-            border-radius: 4px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-            pointer-events: none; 
-            user-select: none;
-            -webkit-user-select: none;
+            position: relative; width: 550px; padding: 20px; max-width: 95%; 
+            border: 1px solid #eee; background-color: #fff; box-sizing: border-box; 
+            margin: 0 auto; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            pointer-events: none; user-select: none; -webkit-user-select: none;
         }
 
         .preview-container.generated-mode {
-            pointer-events: auto !important;
-            user-select: auto !important;
-            -webkit-user-select: auto !important;
-            border: 2px dashed #0097D7;
+            pointer-events: auto !important; user-select: auto !important;
+            -webkit-user-select: auto !important; border: 2px dashed #0097D7;
         }
         
         .preview-container.generated-mode img {
-             pointer-events: auto !important;
-             -webkit-touch-callout: default !important;
+             pointer-events: auto !important; -webkit-touch-callout: default !important;
         }
 
         .logo-wrapper { position: relative; width: 100%; container-type: inline-size; }
-        .logo-wrapper img { width: 100%; display: block; }
         
+        /* 直接顯示 SVG */
+        .logo-wrapper img { width: 100%; display: block; }
+
         #finalResultImg { width: 100%; display: none; border-radius: 4px; }
 
-        /* --- 品牌規範核心定位 --- */
         .chapter-name-wrapper {
-            position: absolute;
-            top: 66.2%;
-            left: 11.8%;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-weight: bold;
-            max-width: 55%; 
-            text-align: left;
-            overflow: visible; 
+            position: absolute; top: 66.2%; left: 11.8%;
+            font-family: 'Plus Jakarta Sans', sans-serif; font-weight: bold;
+            max-width: 55%; text-align: left; overflow: visible; 
         }
 
         .text-line { 
-            font-size: 8.0cqi;
-            line-height: 0.8;
-            white-space: nowrap; 
-            letter-spacing: 0.005em; 
+            font-size: 8.0cqi; line-height: 0.8; white-space: nowrap; letter-spacing: 0.005em; 
         }
-
         #chapterTextLine2 { margin-top: 2.6cqi; }
 
         .hidden { display: none !important; }
@@ -168,63 +105,29 @@
         .text-white { color: #ffffff !important; } 
         .text-black { color: #1c1f2a !important; }
 
-        /* --- 4. 底部版權聲明 --- */
         .footer { 
-            margin-top: auto; 
-            padding: 40px 20px; 
-            width: 100%; 
-            text-align: center; 
-            color: #666; 
-            font-size: 14px;
-            line-height: 1.8; 
-            background-color: #fff;
-            border-top: 1px solid #eee;
+            margin-top: auto; padding: 40px 20px; width: 100%; text-align: center; 
+            color: #666; font-size: 14px; line-height: 1.8; background-color: #fff; border-top: 1px solid #eee;
         }
-        
         .footer-block { margin-bottom: 15px; } 
-
-        /* 連結樣式：青商會官網 */
         .footer-link {
-            color: #333; 
-            text-decoration: none;
-            font-weight: bold;
-            border-bottom: 1px dotted #999; 
-            transition: color 0.2s, border-bottom 0.2s;
+            color: #333; text-decoration: none; font-weight: bold;
+            border-bottom: 1px dotted #999; transition: color 0.2s, border-bottom 0.2s;
         }
         .footer-link:hover { color: #0097D7; border-bottom: 1px solid #0097D7; }
-
-        /* 連結樣式：個人FB (藍色) */
         .footer-link-blue {
-            color: #0097D7; /* JCI Blue */
-            text-decoration: none;
-            font-weight: bold;
-            transition: opacity 0.2s;
+            color: #0097D7; text-decoration: none; font-weight: bold; transition: opacity 0.2s;
         }
-        .footer-link-blue:hover {
-            opacity: 0.8;
-            text-decoration: underline;
-        }
-
+        .footer-link-blue:hover { opacity: 0.8; text-decoration: underline; }
         .copyright-warning { 
-            margin-top: 20px; 
-            padding-top: 15px;
-            border-top: 1px dashed #eee; 
-            font-size: 12px; 
-            color: #aaa; 
-            font-style: italic; 
-            line-height: 1.5;
+            margin-top: 20px; padding-top: 15px; border-top: 1px dashed #eee; 
+            font-size: 12px; color: #aaa; font-style: italic; line-height: 1.5;
         }
 
         @media (max-width: 600px) {
-            .controls {
-                flex-direction: column;
-                align-items: stretch; 
-                gap: 12px;
-                padding: 20px;
-            }
-            .input-group { width: 100%; }
-            input, select { width: 100%; min-width: auto; }
-            .btn-download { width: 100%; margin-top: 8px; height: 48px; font-size: 16px; }
+            .controls { flex-direction: column; align-items: stretch; gap: 12px; padding: 20px; }
+            .input-group, .btn-group-vertical { width: 100%; max-width: 100%; }
+            .btn-base { height: 48px; font-size: 16px; }
             .navbar { font-size: 18px; padding: 14px 0; margin-bottom: 20px; }
         }
     </style>
@@ -237,13 +140,12 @@
         <div class="input-group">
             <label>分會名稱 (Line 1)</label>
             <input type="text" id="chapterInput1" value="Dayuan" oninput="updateLogo()">
-            
             <div id="lengthWarning" class="warning-msg">
                 <strong>⚠️ 文字過長 (Point 4)</strong><br>
-                已超出盾牌右緣範圍，請將多餘文字移至第二行。
+                已超出盾牌右緣範圍<br>
                 <hr class="warning-divider">
-                <strong>⚠️ Text too long (Point 4)</strong><br>
-                Exceeds the shield's right edge. Please move extra text to Line 2.
+                <strong>⚠️ Text too long</strong><br>
+                Exceeds the shield's right edge.
             </div>
         </div>
         <div class="input-group">
@@ -253,15 +155,15 @@
         <div class="input-group">
             <label>Logo 樣式</label>
             <select id="logoSelect" onchange="changeLogoStyle()">
-                <option value="New JCI Logo_Primary.png|#ffffff|jci-blue">Primary (白底藍字)</option>
-                <option value="New JCI Logo_Secondary - White on JCI Blue.png|#0097D7|white">Blue Background (藍底白字)</option>
-                <option value="New JCI Logo_Secondary - White.png|#1c1f2a|white">Dark Background (深底白字)</option>
-                <option value="New JCI Logo_Secondary - Inverted Color on JCI Black.png|#000000|white">Inverted (黑底白字)</option>
-                <option value="New JCI Logo_Secondary - JCI Black.png|#ffffff|black">Black Text (白底黑字)</option>
+                <option value="New JCI Logo (SVG)_Primary.svg|#ffffff|jci-blue">Primary (白底藍字)</option>
+                <option value="New JCI Logo (SVG)_Secondary - White on JCI Blue.svg|#0097D7|white">Blue Background (藍底白字)</option>
+                <option value="New JCI Logo (SVG).svg|#1c1f2a|white">Dark Background (深底白字)</option>
+                <option value="New JCI Logo (SVG)_Secondary - Inverted Color on JCI Black.svg|#000000|white">Inverted (黑底白字)</option>
+                <option value="New JCI Logo (SVG)_Secondary - JCI Black.svg|#ffffff|black">Black Text (白底黑字)</option>
             </select>
         </div>
         <div class="input-group">
-            <label>輸出品質</label>
+            <label>PNG 品質</label>
             <select id="sizeSelect">
                 <option value="1">1x</option>
                 <option value="2">2x</option>
@@ -276,12 +178,17 @@
                 <option value="text-black">Black</option>
             </select>
         </div>
-        <button class="btn-download" onclick="generateImage()">生成圖片 / Generate Image</button>
+        
+        <div class="btn-group-vertical">
+            <button class="btn-base btn-png" onclick="generateImage()">PNG 圖片 (預覽/社群)</button>
+            <button class="btn-base btn-svg" onclick="downloadVector('svg')">SVG 向量檔 (設計/轉框)</button>
+            <button class="btn-base btn-eps" onclick="downloadVector('eps')">EPS 印刷檔 (CMYK/出版)</button>
+        </div>
     </div>
 
     <div class="preview-container" id="previewBox">
         <div class="logo-wrapper" id="captureTarget">
-            <img id="logoImg" src="New JCI Logo_Primary.png">
+            <img id="logoImg" src="New JCI Logo (SVG)_Primary.svg">
             <div id="chapterTextWrapper" class="chapter-name-wrapper">
                 <div id="chapterTextLine1" class="text-line text-jci-blue">Dayuan</div>
                 <div id="chapterTextLine2" class="text-line text-jci-blue hidden"></div>
@@ -308,13 +215,8 @@
     </div>
 
     <script>
-        function isMobile() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
-
-        function isIOS() {
-            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        }
+        function isMobile() { return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
+        function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
 
         window.onload = function() { changeLogoStyle(); };
 
@@ -353,7 +255,6 @@
             } else {
                 warningDiv.style.display = 'none';  
             }
-
             resetPreviewState();
         }
 
@@ -363,55 +264,157 @@
             document.getElementById('previewBox').classList.remove('generated-mode'); 
         }
 
+        // --- PNG 生成 ---
         async function generateImage() {
             var element = document.getElementById('captureTarget');
-            var btn = document.querySelector('.btn-download');
+            var btn = document.querySelector('.btn-png');
             var qualityScale = parseFloat(document.getElementById('sizeSelect').value);
-
-            btn.innerText = "處理中...";
-            btn.disabled = true;
+            btn.innerText = "處理中..."; btn.disabled = true;
 
             var finalScale = qualityScale * 2;
-            if (isIOS() && finalScale > 7) {
-                finalScale = 7; 
-            }
+            if (isIOS() && finalScale > 7) { finalScale = 7; }
 
             resetPreviewState();
             await new Promise(resolve => setTimeout(resolve, 50));
 
             try {
-                const canvas = await html2canvas(element, { 
-                    backgroundColor: null, 
-                    scale: finalScale, 
-                    useCORS: true 
-                });
-
+                // html2canvas 支援 SVG 截圖
+                const canvas = await html2canvas(element, { backgroundColor: null, scale: finalScale, useCORS: true });
                 const imgData = canvas.toDataURL("image/png");
-
                 document.getElementById('captureTarget').style.display = 'none';
-                
                 var finalImg = document.getElementById('finalResultImg');
                 finalImg.src = imgData;
                 finalImg.style.display = 'block';
-                
                 document.getElementById('previewBox').classList.add('generated-mode');
-
-                let msg = "";
-                if (isMobile()) {
-                    msg = "✅ 圖片已生成！\n\n請直接「長按」下方的圖片，並選擇「儲存到相簿」。\n(若需修改文字，輸入新內容即可恢復編輯模式)";
-                } else {
-                    msg = "✅ 圖片已生成！\n\n請在下方的圖片上「按右鍵」，並選擇「另存圖片」來下載。\n(若需修改文字，輸入新內容即可恢復編輯模式)";
-                }
                 
+                let msg = isMobile() ? "✅ 圖片已生成！\n\n請直接「長按」下方的圖片，並選擇「儲存到相簿」。" : "✅ 圖片已生成！\n\n請在下方的圖片上「按右鍵」，並選擇「另存圖片」來下載。";
                 alert(msg);
+            } catch (err) {
+                console.error(err); alert("生成失敗");
+            } finally {
+                btn.innerText = "PNG 圖片 (預覽/社群)"; btn.disabled = false;
+            }
+        }
+
+        // --- 向量引擎 (讀取外部 SVG) ---
+        async function downloadVector(format) {
+            var btn = document.querySelector(format === 'svg' ? '.btn-svg' : '.btn-eps');
+            var originalText = btn.innerText;
+            btn.innerText = "讀取並運算中..."; btn.disabled = true;
+
+            var text1 = document.getElementById('chapterInput1').value;
+            var text2 = document.getElementById('chapterInput2').value;
+            var colorSelectVal = document.getElementById('colorSelect').value;
+            var colors = { 'text-jci-blue': '#0097D7', 'text-white': '#FFFFFF', 'text-black': '#1C1F2A' };
+            var textColorHex = colors[colorSelectVal] || '#0097D7';
+            
+            // 取得目前 SVG 檔名
+            var svgFileName = document.getElementById('logoSelect').value.split('|')[0];
+
+            // 參數設定 (與 CSS 相同)
+            const width = 1000; const height = 665;
+            const fontSize = width * 0.08; 
+            const textYStart = height * 0.662; 
+            const textX = width * 0.118;
+            const lineHeight = fontSize * 0.8;
+            const marginTop = width * 0.026;
+            const line2Y = textYStart + lineHeight + marginTop;
+
+            try {
+                // 讀取外部 SVG
+                const response = await fetch(svgFileName);
+                if (!response.ok) throw new Error("無法讀取 SVG 檔案");
+                const svgText = await response.text();
+                
+                // 載入字體並運算
+                opentype.load('PlusJakartaSans-Bold.ttf', function(err, font) {
+                    if (err) {
+                        alert('字型載入失敗，請確認 PlusJakartaSans-Bold.ttf');
+                        btn.innerText = originalText; btn.disabled = false; return;
+                    }
+
+                    const path1 = font.getPath(text1, textX, textYStart + fontSize, fontSize);
+                    const path1Data = path1.toPathData(2);
+                    let path2Data = "";
+                    if (text2.trim() !== "") {
+                        const path2 = font.getPath(text2, textX, line2Y + fontSize, fontSize);
+                        path2Data = path2.toPathData(2);
+                    }
+
+                    if (format === 'svg') {
+                        // 移除結尾的 </svg>，插入路徑，再封閉
+                        let finalSvgContent = svgText.replace('</svg>', '');
+                        finalSvgContent += `<path d="${path1Data}" fill="${textColorHex}" />`;
+                        finalSvgContent += `<path d="${path2Data}" fill="${textColorHex}" />`;
+                        finalSvgContent += '</svg>';
+                        
+                        triggerDownload(finalSvgContent, `JCI_Logo_${text1}.svg`, 'image/svg+xml');
+                    } 
+                    else if (format === 'eps') {
+                        // EPS 邏輯 (嵌入高解析度 SVG 點陣圖)
+                        var canvas = document.createElement('canvas');
+                        canvas.width = width; canvas.height = height;
+                        var ctx = canvas.getContext('2d');
+                        
+                        var img = new Image();
+                        img.onload = function() {
+                            ctx.drawImage(img, 0, 0, width, height);
+                            var fontPath1 = font.getPath(text1, textX, textYStart + fontSize, fontSize);
+                            var fontPath2 = font.getPath(text2, textX, line2Y + fontSize, fontSize);
+                            
+                            fontPath1.fill = textColorHex; fontPath1.draw(ctx);
+                            if(text2.trim() !== "") { fontPath2.fill = textColorHex; fontPath2.draw(ctx); }
+                            
+                            var imgData = ctx.getImageData(0, 0, width, height);
+                            var hexData = "";
+                            for(var i=0; i<imgData.data.length; i+=4) {
+                                hexData += ((1 << 24) + (imgData.data[i] << 16) + (imgData.data[i+1] << 8) + imgData.data[i+2]).toString(16).slice(1);
+                            }
+
+                            const epsContent = `%!PS-Adobe-3.0 EPSF-3.0
+%%BoundingBox: 0 0 ${width} ${height}
+%%Title: JCI Logo Generated
+%%Creator: JCI Tool
+%%Pages: 1
+%%EndComments
+/readstring { currentfile exch readhexstring pop } bind def
+/picstr ${width} 3 mul string def
+gsave
+${width} ${height} scale
+${width} ${height} 8 [${width} 0 0 -${height} 0 ${height}]
+{ picstr readstring } false 3
+colorimage
+${hexData}
+grestore
+%%EOF`;
+                            triggerDownload(epsContent, `JCI_Logo_${text1}.eps`, 'application/postscript');
+                            btn.innerText = originalText; btn.disabled = false;
+                        };
+                        // 將 SVG 轉為 Base64 供 Canvas 繪製
+                        img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgText)));
+                        return;
+                    }
+                    
+                    btn.innerText = originalText; btn.disabled = false;
+                });
 
             } catch (err) {
                 console.error(err);
-                alert("生成失敗，請重新整理頁面再試。");
-            } finally {
-                btn.innerText = "生成圖片 / Generate Image";
-                btn.disabled = false;
+                alert("讀取 SVG 檔案失敗。請確認檔案名稱是否正確，且未使用直接雙擊 HTML 的方式開啟 (需使用 Local Server)。");
+                btn.innerText = originalText; btn.disabled = false;
             }
+        }
+
+        function triggerDownload(content, filename, mimeType) {
+            const blob = new Blob([content], {type: mimeType});
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = url;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>
