@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (Final Fix)</title>
+    <title>JCI Logo Generator (V3.3 Stable)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 全局字型與重置 */
@@ -95,13 +95,13 @@
             border-radius: 4px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
             
-            /* 編輯模式下，禁止長按，避免存錯圖 */
+            /* 預設鎖定 */
             pointer-events: none; 
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* 生成模式：加上這個 class 後，允許長按，且會顯示藍色框框提示 */
+        /* 生成模式：解鎖長按 */
         .preview-container.generated-mode {
             pointer-events: auto !important;
             user-select: auto !important;
@@ -109,14 +109,21 @@
             border: 2px dashed #0097D7;
         }
 
-        /* 這是原本的層疊結構 */
+        /* ★強制圖片本身可以被選取★ */
+        .preview-container.generated-mode img {
+            pointer-events: auto !important;
+            user-select: auto !important;
+            -webkit-user-select: auto !important;
+            -webkit-touch-callout: default !important; /* iOS 關鍵：允許長按選單 */
+        }
+
         .logo-wrapper { position: relative; width: 100%; container-type: inline-size; }
         .logo-wrapper img { width: 100%; display: block; }
         
-        /* 這是最後生成出來的單張圖片 (預設隱藏) */
+        /* 結果圖 (預設隱藏) */
         #finalResultImg {
             width: 100%;
-            display: none; /* 一開始不顯示 */
+            display: none; 
             border-radius: 4px;
         }
 
@@ -247,7 +254,6 @@
                 <div id="chapterTextLine2" class="text-line text-jci-blue hidden"></div>
             </div>
         </div>
-        
         <img id="finalResultImg" alt="Generated Logo">
     </div>
 
@@ -269,10 +275,6 @@
     </div>
 
     <script>
-        function isIOS() {
-            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        }
-
         window.onload = function() { changeLogoStyle(); };
 
         function changeLogoStyle() {
@@ -287,7 +289,7 @@
             updateLogo();
         }
 
-        // 當使用者輸入或切換樣式時，重置回「編輯模式」
+        // 修改內容時，重置回編輯模式
         function updateLogo() {
             var input1 = document.getElementById('chapterInput1').value;
             var input2 = document.getElementById('chapterInput2').value;
@@ -305,14 +307,23 @@
                 line2Div.classList.add('hidden');
             }
 
-            // ★ 關鍵：只要一修改，就恢復編輯模式，隱藏結果圖 ★
             resetPreviewState();
         }
 
         function resetPreviewState() {
-            document.getElementById('captureTarget').style.display = 'block'; // 顯示編輯層
-            document.getElementById('finalResultImg').style.display = 'none'; // 隱藏結果圖
-            document.getElementById('previewBox').classList.remove('generated-mode'); // 鎖定長按
+            document.getElementById('captureTarget').style.display = 'block'; 
+            document.getElementById('finalResultImg').style.display = 'none'; 
+            document.getElementById('previewBox').classList.remove('generated-mode'); 
+        }
+
+        // 資料 URI 轉換 (解決 Blob 在 Chrome iOS 上的問題)
+        function dataURLtoFile(dataurl, filename) {
+            var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+                bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+            while(n--){
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new File([u8arr], filename, {type:mime});
         }
 
         async function downloadImage() {
@@ -331,59 +342,51 @@
                     useCORS: true 
                 });
 
-                canvas.toBlob(async function(blob) {
-                    const fileName = `JCI_Logo_${chapterName}.png`;
-                    const file = new File([blob], fileName, { type: 'image/png' });
-                    const imgUrl = URL.createObjectURL(blob);
+                // ★ 改用 DataURL (Base64) 字串，這對 iOS Chrome 的長按儲存支援度最好 ★
+                const imgData = canvas.toDataURL("image/png");
+                const fileName = `JCI_Logo_${chapterName}.png`;
 
-                    // --- ★ 關鍵動作：切換成「生成模式」 ★ ---
-                    // 1. 把編輯層隱藏
-                    document.getElementById('captureTarget').style.display = 'none';
-                    // 2. 把生成的圖片塞進去並顯示
-                    var finalImg = document.getElementById('finalResultImg');
-                    finalImg.src = imgUrl;
-                    finalImg.style.display = 'block';
-                    // 3. 解鎖長按功能
-                    document.getElementById('previewBox').classList.add('generated-mode');
-                    // ----------------------------------------
+                // 1. 馬上切換顯示生成的圖片 (解決長按沒字問題)
+                document.getElementById('captureTarget').style.display = 'none';
+                var finalImg = document.getElementById('finalResultImg');
+                finalImg.src = imgData;
+                finalImg.style.display = 'block';
+                document.getElementById('previewBox').classList.add('generated-mode');
 
-                    // 優先：嘗試分享選單
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                // 2. 嘗試呼叫分享選單
+                if (navigator.canShare) {
+                    const file = dataURLtoFile(imgData, fileName);
+                    if (navigator.canShare({ files: [file] })) {
                         try {
                             await navigator.share({
                                 files: [file],
                                 title: 'JCI Logo',
                             });
-                            btn.innerText = "下載圖片 / Save Image";
-                            btn.disabled = false;
-                            return;
                         } catch (err) {
-                            // 使用者取消或不支援
-                            console.log("Share API skipped");
+                            console.log("Share skipped/cancelled");
+                            // 這裡不報錯，因為圖片已經秀出來了，使用者可以自己長按
                         }
                     }
-
-                    // 備用：直接下載
+                } else {
+                    // 電腦版或不支援分享的，走直接下載
                     const link = document.createElement('a');
                     link.download = fileName;
-                    link.href = imgUrl;
+                    link.href = imgData;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-                    
-                    if (isIOS()) {
-                         alert("✅ 圖片已生成！\n\n如果沒有彈出選項，請直接「長按」上方的圖片進行儲存。\n(修改文字即可恢復編輯)");
-                    }
-
-                    btn.innerText = "下載圖片 / Save Image";
-                    btn.disabled = false;
-
-                }, 'image/png', 1.0); 
+                }
 
             } catch (err) {
                 console.error(err);
-                alert("生成失敗，請稍後再試。");
+                alert("發生錯誤，請截圖或稍後再試。");
+            } finally {
+                // ★ 關鍵：無論成功、失敗、還是使用者按取消，這裡一定會執行，確保按鈕恢復 ★
+                btn.innerText = "下載圖片 / Save Image";
                 btn.disabled = false;
+                
+                // 為了保險，再次確保圖片是可以被選取的
+                document.getElementById('previewBox').classList.add('generated-mode');
             }
         }
     </script>
