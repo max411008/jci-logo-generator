@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (Spacing Fix)</title>
+    <title>JCI Logo Generator (Final Release)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 全局字型與重置 */
@@ -82,7 +82,7 @@
         .btn-download:hover { background-color: #007bb5; }
         .btn-download:disabled { background-color: #ccc; box-shadow: none; cursor: not-allowed; }
 
-        /* --- 3. 預覽區 (預設鎖定) --- */
+        /* --- 3. 預覽區 --- */
         .preview-container { 
             position: relative; 
             width: 550px;       
@@ -94,7 +94,7 @@
             margin: 0 auto;
             border-radius: 4px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-            pointer-events: none; 
+            pointer-events: none; /* 鎖定 */
             user-select: none;
             -webkit-user-select: none;
         }
@@ -109,7 +109,7 @@
         .logo-wrapper { position: relative; width: 100%; container-type: inline-size; }
         .logo-wrapper img { width: 100%; display: block; }
         
-        /* 品牌規範核心定位 */
+        /* --- 品牌規範核心定位 --- */
         .chapter-name-wrapper {
             position: absolute;
             top: 66%;
@@ -122,23 +122,20 @@
 
         .text-line { 
             font-size: 8.4cqi;
-            line-height: 0.8; /* 維持第一行緊湊對齊 */
+            line-height: 0.8;    /* 維持緊湊行高 */
             white-space: nowrap; 
-            letter-spacing: 0px; 
+            letter-spacing: 0.03em; /* ★ 修正點：增加字距，解決重疊 ★ */
         }
 
-        /* ★★★ 這裡就是修正間距的地方 ★★★ */
-        /* 增加這個數值來拉大第二行與第一行的距離 */
-        #chapterTextLine2 { 
-            margin-top: 2.4cqi; 
-        }
+        /* 第二行獨立間距，解決垂直重疊 */
+        #chapterTextLine2 { margin-top: 1.5cqi; }
 
         .hidden { display: none !important; }
         .text-jci-blue { color: #0097D7 !important; }
         .text-white { color: #ffffff !important; } 
         .text-black { color: #1c1f2a !important; }
 
-        /* --- 4. 底部版權聲明 (完整版) --- */
+        /* --- 4. 底部版權聲明 --- */
         .footer { 
             margin-top: auto; 
             padding: 40px 20px; 
@@ -248,7 +245,6 @@
     </div>
 
     <script>
-        // --- 智慧判斷系統 ---
         function getMobileOS() {
             var userAgent = navigator.userAgent || navigator.vendor || window.opera;
             if (/android/i.test(userAgent)) { return "Android"; }
