@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (V3.1)</title>
+    <title>JCI Logo Generator (Final Fix)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 全局字型與重置 */
@@ -82,7 +82,7 @@
         .btn-download:hover { background-color: #007bb5; }
         .btn-download:disabled { background-color: #ccc; box-shadow: none; cursor: not-allowed; }
 
-        /* --- 3. 預覽區 (預設鎖定) --- */
+        /* --- 3. 預覽區 (編輯模式) --- */
         .preview-container { 
             position: relative; 
             width: 550px;       
@@ -95,24 +95,32 @@
             border-radius: 4px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
             
-            /* 預設鎖定，防止誤觸 */
+            /* 編輯模式下，禁止長按，避免存錯圖 */
             pointer-events: none; 
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* 當允許長按時，加入這個 class */
-        .preview-container.allow-touch {
+        /* 生成模式：加上這個 class 後，允許長按，且會顯示藍色框框提示 */
+        .preview-container.generated-mode {
             pointer-events: auto !important;
             user-select: auto !important;
             -webkit-user-select: auto !important;
-            border: 2px dashed #0097D7; /* 藍色虛線框提示 */
+            border: 2px dashed #0097D7;
         }
 
+        /* 這是原本的層疊結構 */
         .logo-wrapper { position: relative; width: 100%; container-type: inline-size; }
         .logo-wrapper img { width: 100%; display: block; }
         
-        /* --- 品牌規範核心定位 (V2.9 參數) --- */
+        /* 這是最後生成出來的單張圖片 (預設隱藏) */
+        #finalResultImg {
+            width: 100%;
+            display: none; /* 一開始不顯示 */
+            border-radius: 4px;
+        }
+
+        /* --- 品牌規範核心定位 --- */
         .chapter-name-wrapper {
             position: absolute;
             top: 66.2%;
@@ -152,16 +160,15 @@
         
         .footer-block { margin-bottom: 15px; } 
 
-        /* 超連結樣式優化 */
         .footer-link {
-            color: #333; /* 預設深灰，不刺眼 */
+            color: #333; 
             text-decoration: none;
             font-weight: bold;
-            border-bottom: 1px dotted #999; /* 點狀底線，暗示可點擊 */
+            border-bottom: 1px dotted #999; 
             transition: color 0.2s, border-bottom 0.2s;
         }
         .footer-link:hover {
-            color: #0097D7; /* JCI Blue */
+            color: #0097D7; 
             border-bottom: 1px solid #0097D7;
         }
 
@@ -240,6 +247,8 @@
                 <div id="chapterTextLine2" class="text-line text-jci-blue hidden"></div>
             </div>
         </div>
+        
+        <img id="finalResultImg" alt="Generated Logo">
     </div>
 
     <div class="footer">
@@ -260,7 +269,6 @@
     </div>
 
     <script>
-        // 判斷是否為 iOS (包含 Chrome on iOS)
         function isIOS() {
             return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         }
@@ -279,12 +287,14 @@
             updateLogo();
         }
 
+        // 當使用者輸入或切換樣式時，重置回「編輯模式」
         function updateLogo() {
             var input1 = document.getElementById('chapterInput1').value;
             var input2 = document.getElementById('chapterInput2').value;
             var colorClass = document.getElementById('colorSelect').value;
             var line1Div = document.getElementById('chapterTextLine1');
             var line2Div = document.getElementById('chapterTextLine2');
+            
             line1Div.textContent = input1;
             line1Div.className = 'text-line ' + colorClass;
             if (input2.trim() !== "") {
@@ -294,6 +304,15 @@
             } else {
                 line2Div.classList.add('hidden');
             }
+
+            // ★ 關鍵：只要一修改，就恢復編輯模式，隱藏結果圖 ★
+            resetPreviewState();
+        }
+
+        function resetPreviewState() {
+            document.getElementById('captureTarget').style.display = 'block'; // 顯示編輯層
+            document.getElementById('finalResultImg').style.display = 'none'; // 隱藏結果圖
+            document.getElementById('previewBox').classList.remove('generated-mode'); // 鎖定長按
         }
 
         async function downloadImage() {
@@ -315,44 +334,45 @@
                 canvas.toBlob(async function(blob) {
                     const fileName = `JCI_Logo_${chapterName}.png`;
                     const file = new File([blob], fileName, { type: 'image/png' });
+                    const imgUrl = URL.createObjectURL(blob);
 
-                    // --- 智慧判斷 ---
-                    // iPhone (Safari/Chrome) -> 優先嘗試分享選單
-                    if (isIOS()) {
+                    // --- ★ 關鍵動作：切換成「生成模式」 ★ ---
+                    // 1. 把編輯層隱藏
+                    document.getElementById('captureTarget').style.display = 'none';
+                    // 2. 把生成的圖片塞進去並顯示
+                    var finalImg = document.getElementById('finalResultImg');
+                    finalImg.src = imgUrl;
+                    finalImg.style.display = 'block';
+                    // 3. 解鎖長按功能
+                    document.getElementById('previewBox').classList.add('generated-mode');
+                    // ----------------------------------------
+
+                    // 優先：嘗試分享選單
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
                         try {
-                            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                                await navigator.share({
-                                    files: [file],
-                                    title: 'JCI Logo',
-                                });
-                                // 分享成功，結束
-                                btn.innerText = "下載圖片 / Save Image";
-                                btn.disabled = false;
-                                return;
-                            }
+                            await navigator.share({
+                                files: [file],
+                                title: 'JCI Logo',
+                            });
+                            btn.innerText = "下載圖片 / Save Image";
+                            btn.disabled = false;
+                            return;
                         } catch (err) {
-                            console.log("iOS Share cancelled or failed");
-                            // 如果分享失敗（例如 Chrome 擋住），繼續往下走，執行解鎖邏輯
+                            // 使用者取消或不支援
+                            console.log("Share API skipped");
                         }
                     }
 
-                    // --- 備用/Android 邏輯 ---
-                    // 1. 嘗試直接下載
-                    const url = URL.createObjectURL(blob);
+                    // 備用：直接下載
                     const link = document.createElement('a');
                     link.download = fileName;
-                    link.href = url;
+                    link.href = imgUrl;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                    
-                    // 2. ★ 關鍵步驟：不管上面有沒有成功，立刻解鎖圖片，允許長按 ★
-                    // 這是為了應付 iPhone Chrome 失敗的情況
-                    document.getElementById('previewBox').classList.add('allow-touch');
                     
                     if (isIOS()) {
-                        alert("✅ 圖片已生成！\n\n如果沒有彈出選項，請直接「長按」上方的圖片進行儲存。");
+                         alert("✅ 圖片已生成！\n\n如果沒有彈出選項，請直接「長按」上方的圖片進行儲存。\n(修改文字即可恢復編輯)");
                     }
 
                     btn.innerText = "下載圖片 / Save Image";
@@ -362,8 +382,7 @@
 
             } catch (err) {
                 console.error(err);
-                document.getElementById('previewBox').classList.add('allow-touch');
-                alert("生成失敗，請長按圖片儲存。");
+                alert("生成失敗，請稍後再試。");
                 btn.disabled = false;
             }
         }
