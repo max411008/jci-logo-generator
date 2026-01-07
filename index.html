@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (V4.7 Minimalist)</title>
+    <title>JCI Logo Generator (V4.8 Final)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 全局字型與重置 */
@@ -149,7 +149,7 @@
             left: 11.8%;
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: bold;
-            max-width: 55%; /* 維持 55% 嚴格限制 */
+            max-width: 55%; 
             text-align: left;
             overflow: visible; 
         }
@@ -183,6 +183,7 @@
         
         .footer-block { margin-bottom: 15px; } 
 
+        /* 連結樣式：青商會官網 */
         .footer-link {
             color: #333; 
             text-decoration: none;
@@ -191,6 +192,18 @@
             transition: color 0.2s, border-bottom 0.2s;
         }
         .footer-link:hover { color: #0097D7; border-bottom: 1px solid #0097D7; }
+
+        /* 連結樣式：個人FB (藍色) */
+        .footer-link-blue {
+            color: #0097D7; /* JCI Blue */
+            text-decoration: none;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        .footer-link-blue:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
 
         .copyright-warning { 
             margin-top: 20px; 
@@ -279,11 +292,13 @@
 
     <div class="footer">
         <div class="footer-block">
-            Designed & Developed by <strong>Chenghui Lin</strong><br>
+            Designed & Developed by 
+            <a href="https://www.facebook.com/zhenhui.lin/" target="_blank" class="footer-link-blue">Chenghui Lin</a><br>
             (2023 President, JCI Dayuan)
         </div>
         <div class="footer-block">
-            <a href="https://www.jcidayuan.site/" target="_blank" class="footer-link">桃園市大園國際青年商會</a> 2023年會長 林振暉 製作<br>
+            <a href="https://www.jcidayuan.site/" target="_blank" class="footer-link">桃園市大園國際青年商會</a> 
+            <a href="https://www.facebook.com/zhenhui.lin/" target="_blank" class="footer-link-blue">2023年會長 林振暉</a> 製作<br>
             Copyright &copy; 2026 Chenghui Lin. All rights reserved.
         </div>
         <div class="copyright-warning">
