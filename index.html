@@ -3,35 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JCI Logo Generator (Official Specs Ver.)</title>
+    <title>JCI Logo Generator (Pro Mobile Ver.)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* 字型設定 */
+        /* 全局字型與重置 */
         @font-face { font-family: 'Plus Jakarta Sans'; src: url('PlusJakartaSans-Bold.ttf') format('truetype'); font-weight: bold; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f4f4; display: flex; flex-direction: column; align-items: center; padding: 20px; user-select: none; }
-        
-        /* 簽名檔 */
-        .footer { margin-bottom: 20px; font-size: 16px; line-height: 1.5; color: #666; text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 15px; width: 100%; }
-        .footer strong { color: #0097D7; }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #f8f9fa; 
+            margin: 0; 
+            padding: 0;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh;
+            color: #333;
+        }
 
-        /* 介面設定 */
-        .controls { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
-        .input-group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 12px; font-weight: bold; color: #555; }
-        input, select { padding: 8px 12px; font-size: 14px; border: 1px solid #ddd; border-radius: 6px; min-width: 150px; }
-        
-        .btn-download { padding: 8px 20px; font-size: 14px; font-weight: bold; color: white; background-color: #0097D7; border: none; border-radius: 6px; cursor: pointer; height: 38px; }
+        /* --- 1. App 頂部導航列 (Navbar) --- */
+        .navbar {
+            width: 100%;
+            background-color: #0097D7; /* JCI Blue */
+            color: white;
+            padding: 16px 0;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            margin-bottom: 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-        /* 預覽區 */
-        .preview-container { position: relative; width: 550px; padding: 20px; max-width: 95%; border: 1px solid #ddd; background-color: #fff; box-sizing: border-box; margin: 0 auto; }
+        /* --- 2. 操作面板 (Controls) --- */
+        .controls { 
+            background: white; 
+            padding: 24px; 
+            border-radius: 16px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
+            display: flex; 
+            gap: 16px; 
+            align-items: flex-end; 
+            margin-bottom: 24px; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            max-width: 800px;
+            width: 90%;
+        }
+        
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 13px; font-weight: 700; color: #555; margin-left: 2px; }
+        input, select { 
+            padding: 10px 14px; 
+            font-size: 15px; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 8px; 
+            min-width: 160px; 
+            background-color: #fdfdfd;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus { border-color: #0097D7; outline: none; }
+        
+        .btn-download { 
+            padding: 10px 24px; 
+            font-size: 15px; 
+            font-weight: bold; 
+            color: white; 
+            background-color: #0097D7; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            height: 42px; 
+            transition: background-color 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 151, 215, 0.2);
+        }
+        .btn-download:hover { background-color: #007bb5; }
+        .btn-download:disabled { background-color: #ccc; box-shadow: none; cursor: not-allowed; }
+
+        /* --- 3. 預覽區 (Preview) --- */
+        .preview-container { 
+            position: relative; 
+            width: 550px;       
+            padding: 20px; 
+            max-width: 95%; 
+            border: 1px solid #eee; 
+            background-color: #fff; 
+            box-sizing: border-box; 
+            margin: 0 auto;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+
         .logo-wrapper { position: relative; width: 100%; container-type: inline-size; }
         .logo-wrapper img { width: 100%; display: block; }
         
-        /* --- 品牌規範核心定位 --- */
+        /* --- 品牌規範核心定位 (保持不變) --- */
         .chapter-name-wrapper {
             position: absolute;
-            top: 66%;         /* 對齊盾牌底部 */
-            left: 11.2%;      /* 精確對齊 'J' 字母左側 */
+            top: 66%;         /* Final: 66% */
+            left: 12%;        /* Final: 12% */
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: bold;
             max-width: 72%;
@@ -39,25 +111,58 @@
         }
 
         .text-line { 
-            font-size: 8.4cqi;  /* 在 570px 寬度下約等於 60pt */
-            line-height: 1.1;   /* 規範：110% Leading */
+            font-size: 8.4cqi;  /* 約 60pt */
+            line-height: 0.8;   /* Final: 0.8 (緊湊行距) */
             white-space: nowrap; 
-            letter-spacing: 0px; /* 規範：Tracking 0 */
+            letter-spacing: 0px; 
         }
-        /* ----------------------- */
 
         .hidden { display: none !important; }
         .text-jci-blue { color: #0097D7 !important; }
         .text-white { color: #ffffff !important; } 
         .text-black { color: #1c1f2a !important; }
+
+        /* --- 4. 底部版權聲明 (Footer) --- */
+        .footer { 
+            margin-top: auto; /* 推到底部 */
+            padding: 30px 20px;
+            width: 100%; 
+            text-align: center; 
+            color: #888; 
+            font-size: 13px;
+            line-height: 1.6;
+            background-color: #fff;
+            border-top: 1px solid #eee;
+        }
+        .footer strong { color: #0097D7; font-weight: bold; }
+        .copyright-warning { margin-top: 8px; font-size: 12px; color: #aaa; font-style: italic; }
+
+        /* --- 5. 手機版專屬優化 (RWD) --- */
+        @media (max-width: 600px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch; /* 讓所有元件滿版 */
+                gap: 12px;
+                padding: 20px;
+            }
+            
+            .input-group { width: 100%; }
+            input, select { width: 100%; min-width: auto; } /* 輸入框滿寬 */
+            
+            .btn-download { 
+                width: 100%; /* 按鈕滿寬 */
+                margin-top: 8px;
+                height: 48px; /* 手機上按鈕做高一點更好按 */
+                font-size: 16px;
+            }
+
+            .navbar { font-size: 18px; padding: 14px 0; margin-bottom: 20px; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="footer">
-        <strong>台灣&emsp;桃園市大園國際青年商會 2023年會長 林振暉 製作</strong>&emsp;版本號V1.3 (Official Specs)&emsp;2025_12_04</br>
-        Designed & Developed by Chenghui Lin, 2023 President, Dayuan Chapter, JCI Taiwan
-    </div>
+    <nav class="navbar">JCI Logo Generator</nav>
 
     <div class="controls">
         <div class="input-group">
@@ -79,7 +184,7 @@
             </select>
         </div>
         <div class="input-group">
-            <label>輸出品質 (解析度)</label>
+            <label>輸出品質</label>
             <select id="sizeSelect">
                 <option value="1">標準 (社群媒體)</option>
                 <option value="2">清晰 (簡報使用)</option>
@@ -104,6 +209,15 @@
                 <div id="chapterTextLine1" class="text-line text-jci-blue">Dayuan</div>
                 <div id="chapterTextLine2" class="text-line text-jci-blue hidden"></div>
             </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Designed & Developed by <strong>Chenghui Lin</strong> (2023 President, JCI Dayuan)<br>
+        台灣&emsp;桃園市大園國際青年商會 2023年會長 林振暉 製作 &copy; 2025
+        <div class="copyright-warning">
+            本程式由 2023 大園青商 林振暉 會長為服務 JCI 夥伴免費開發。<br>
+            歡迎廣泛使用，惟請尊重原創開發者成果，請勿私自盜用、修改或宣稱為個人作品。
         </div>
     </div>
 
@@ -159,7 +273,7 @@
                     const url = URL.createObjectURL(blob);
                     if (isMobile()) {
                         window.location.href = url; 
-                        alert("✅ 圖片已精確生成！\n解析度已優化。\n請長按圖片儲存，完成後按返回鍵。");
+                        alert("✅ 圖片已生成！\n\n1. 請長按圖片。\n2. 選擇「儲存圖片」或「加入照片」。\n3. 完成後按返回鍵。");
                     } else {
                         var link = document.createElement('a');
                         link.download = `JCI_Logo_${chapterName}.png`;
@@ -173,7 +287,8 @@
                     btn.disabled = false;
                 }, 'image/png', 1.0); 
             }).catch(err => {
-                alert("生成失敗！");
+                console.error(err);
+                alert("生成失敗，請稍後再試！");
                 btn.disabled = false;
             });
         }
