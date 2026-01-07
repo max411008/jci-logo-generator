@@ -326,7 +326,7 @@
             }
 
             // ★★★ 智慧偵測修正 ★★★
-            // max-width 已設為 67%。只要 scrollWidth (實際文字寬度) 超過 clientWidth (限制寬度)，就顯示警告
+            // max-width 已設為 60%。只要 scrollWidth (實際文字寬度) 超過 clientWidth (限制寬度)，就顯示警告
             var warningDiv = document.getElementById('lengthWarning');
             if (line1Div.scrollWidth > line1Div.clientWidth) {
                 warningDiv.style.display = 'block'; 
