@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (V3.3 Stable)</title>
+    <title>JCI Logo Generator (Manual Save)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 全局字型與重置 */
@@ -66,6 +66,7 @@
         }
         input:focus, select:focus { border-color: #0097D7; outline: none; }
         
+        /* 按鈕樣式 (文字改為生成圖片) */
         .btn-download { 
             padding: 10px 24px; 
             font-size: 15px; 
@@ -95,26 +96,24 @@
             border-radius: 4px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
             
-            /* 預設鎖定 */
+            /* 編輯時鎖定長按，避免存到還沒生成的圖 */
             pointer-events: none; 
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* 生成模式：解鎖長按 */
+        /* 生成模式：允許長按，並加框提示 */
         .preview-container.generated-mode {
             pointer-events: auto !important;
             user-select: auto !important;
             -webkit-user-select: auto !important;
             border: 2px dashed #0097D7;
         }
-
-        /* ★強制圖片本身可以被選取★ */
+        
+        /* 確保生成的圖片能被選取 */
         .preview-container.generated-mode img {
-            pointer-events: auto !important;
-            user-select: auto !important;
-            -webkit-user-select: auto !important;
-            -webkit-touch-callout: default !important; /* iOS 關鍵：允許長按選單 */
+             pointer-events: auto !important;
+             -webkit-touch-callout: default !important;
         }
 
         .logo-wrapper { position: relative; width: 100%; container-type: inline-size; }
@@ -127,7 +126,7 @@
             border-radius: 4px;
         }
 
-        /* --- 品牌規範核心定位 --- */
+        /* --- 品牌規範核心定位 (您的最終參數) --- */
         .chapter-name-wrapper {
             position: absolute;
             top: 66.2%;
@@ -243,7 +242,7 @@
                 <option value="text-black">Black</option>
             </select>
         </div>
-        <button class="btn-download" onclick="downloadImage()">下載圖片 / Save Image</button>
+        <button class="btn-download" onclick="generateImage()">生成圖片 / Generate Image</button>
     </div>
 
     <div class="preview-container" id="previewBox">
@@ -316,19 +315,9 @@
             document.getElementById('previewBox').classList.remove('generated-mode'); 
         }
 
-        // 資料 URI 轉換 (解決 Blob 在 Chrome iOS 上的問題)
-        function dataURLtoFile(dataurl, filename) {
-            var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
-                bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-            while(n--){
-                u8arr[n] = bstr.charCodeAt(n);
-            }
-            return new File([u8arr], filename, {type:mime});
-        }
-
-        async function downloadImage() {
+        // 核心功能：只生成，不下載
+        async function generateImage() {
             var element = document.getElementById('captureTarget');
-            var chapterName = document.getElementById('chapterInput1').value;
             var btn = document.querySelector('.btn-download');
             var qualityScale = parseFloat(document.getElementById('sizeSelect').value);
 
@@ -342,51 +331,30 @@
                     useCORS: true 
                 });
 
-                // ★ 改用 DataURL (Base64) 字串，這對 iOS Chrome 的長按儲存支援度最好 ★
+                // 轉為 Base64 圖片
                 const imgData = canvas.toDataURL("image/png");
-                const fileName = `JCI_Logo_${chapterName}.png`;
 
-                // 1. 馬上切換顯示生成的圖片 (解決長按沒字問題)
+                // 1. 隱藏編輯層
                 document.getElementById('captureTarget').style.display = 'none';
+                
+                // 2. 顯示結果圖 (這張圖可以被長按)
                 var finalImg = document.getElementById('finalResultImg');
                 finalImg.src = imgData;
                 finalImg.style.display = 'block';
+                
+                // 3. 解鎖容器，允許長按
                 document.getElementById('previewBox').classList.add('generated-mode');
 
-                // 2. 嘗試呼叫分享選單
-                if (navigator.canShare) {
-                    const file = dataURLtoFile(imgData, fileName);
-                    if (navigator.canShare({ files: [file] })) {
-                        try {
-                            await navigator.share({
-                                files: [file],
-                                title: 'JCI Logo',
-                            });
-                        } catch (err) {
-                            console.log("Share skipped/cancelled");
-                            // 這裡不報錯，因為圖片已經秀出來了，使用者可以自己長按
-                        }
-                    }
-                } else {
-                    // 電腦版或不支援分享的，走直接下載
-                    const link = document.createElement('a');
-                    link.download = fileName;
-                    link.href = imgData;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }
+                // 4. 跳出簡單明確的提示 (不再嘗試自動下載)
+                alert("✅ 圖片已生成！\n\n請直接「長按」下方的圖片，並選擇「儲存到相簿」。\n(若需修改文字，輸入新內容即可恢復編輯模式)");
 
             } catch (err) {
                 console.error(err);
-                alert("發生錯誤，請截圖或稍後再試。");
+                alert("生成失敗，請重新整理頁面再試。");
             } finally {
-                // ★ 關鍵：無論成功、失敗、還是使用者按取消，這裡一定會執行，確保按鈕恢復 ★
-                btn.innerText = "下載圖片 / Save Image";
+                // 重置按鈕
+                btn.innerText = "生成圖片 / Generate Image";
                 btn.disabled = false;
-                
-                // 為了保險，再次確保圖片是可以被選取的
-                document.getElementById('previewBox').classList.add('generated-mode');
             }
         }
     </script>
