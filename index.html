@@ -3,24 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JCI Logo Generator (Dayuan Web Ver.)</title>
+    <title>JCI Logo Generator (Global Ver.)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 字型設定 */
         @font-face { font-family: 'Plus Jakarta Sans'; src: url('PlusJakartaSans-Bold.ttf') format('truetype'); font-weight: bold; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f4f4; display: flex; flex-direction: column; align-items: center; padding: 20px; user-select: none; }
         
+        /* 簽名檔 (置頂) */
+        .footer { 
+            margin-bottom: 20px; 
+            font-size: 16px; 
+            line-height: 1.5; 
+            color: #666; 
+            text-align: center; 
+            border-bottom: 1px solid #ddd; 
+            padding-bottom: 15px; 
+            width: 100%; 
+        }
+        .footer strong { color: #0097D7; }
+
         /* 介面設定 */
         .controls { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
         .input-group { display: flex; flex-direction: column; gap: 5px; }
         label { font-size: 12px; font-weight: bold; color: #555; }
-        input, select { padding: 8px 12px; font-size: 14px; border: 1px solid #ddd; border-radius: 6px; min-width: 180px; }
+        input, select { padding: 8px 12px; font-size: 14px; border: 1px solid #ddd; border-radius: 6px; min-width: 150px; }
         
         .btn-download { padding: 8px 20px; font-size: 14px; font-weight: bold; color: white; background-color: #0097D7; border: none; border-radius: 6px; cursor: pointer; height: 38px; }
         .btn-download:hover { background-color: #007bb5; }
         .btn-download:disabled { background-color: #ccc; cursor: not-allowed; }
 
-        /* 預覽區 (緊湊版) */
+        /* 預覽區 */
         .preview-container { 
             position: relative; 
             width: 550px;       
@@ -35,11 +48,11 @@
         .logo-wrapper { position: relative; width: 100%; container-type: inline-size; }
         .logo-wrapper img { width: 100%; display: block; }
         
-        /* 文字定位 */
+        /* 文字定位與樣式 */
         .chapter-name-wrapper {
             position: absolute;
-            top: 66%; 
-            left: 12%; 
+            top: 66%; /* 根據您的微調 */
+            left: 12%; /* 根據您的微調 */
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: bold;
             max-width: 72%;
@@ -50,37 +63,21 @@
             line-height: 0.8; 
             white-space: nowrap; 
         }
+
+        #chapterTextLine2 {
+            margin-top: 2.0cqi; /* 寬闊間距規範 */
+        }
         
         .hidden { display: none !important; }
-
-        /* Line 2 間距 */
-        #chapterTextLine2 {
-            margin-top: 2.0cqi; 
-        }
-
-        /* 顏色優先級 */
         .text-jci-blue { color: #0097D7 !important; }
         .text-white { color: #ffffff !important; } 
         .text-black { color: #1c1f2a !important; }
-
-        /* 簽名檔 (字體加大) */
-        .footer { 
-            margin-top: 30px; 
-            font-size: 14px; 
-            line-height: 1.5; 
-            color: #666; 
-            text-align: center; 
-            border-bottom: 1px solid #ddd; 
-            padding-top: 15px; 
-            width: 100%; 
-        }
-        .footer strong { color: #0097D7; }
     </style>
 </head>
 <body>
 
     <div class="footer">
-        <strong>桃園市大園國際青年商會 2023年會長 林振暉 製作</strong><br>版本號V1.0&emsp;2025_12_04</br>
+        <strong>台灣&emsp;桃園市大園國際青年商會 2023年會長 林振暉 製作</strong>&emsp;版本號V1.1&emsp;2025_12_04</br>
         Designed & Developed by Chenghui Lin, 2023 President, Dayuan Chapter, JCI Taiwan
     </div>
 
@@ -94,21 +91,35 @@
             <input type="text" id="chapterInput2" value="" oninput="updateLogo()">
         </div>
         <div class="input-group">
-            <label>選擇圖片 (Logo Style)</label>
+            <label>Logo 樣式</label>
             <select id="logoSelect" onchange="changeLogoStyle()">
-                <option value="New JCI Logo_Primary.png|#ffffff|jci-blue">Primary (白底標準)</option>
-                <option value="New JCI Logo_Secondary - White on JCI Blue.png|#0097D7|white">White on JCI Blue (藍底白字)</option>
-                <option value="New JCI Logo_Secondary - White.png|#1c1f2a|white">Secondary White (深色底白字)</option>
-                <option value="New JCI Logo_Secondary - Inverted Color on JCI Black.png|#000000|white">Inverted on Black (黑底反白)</option>
-                <option value="New JCI Logo_Secondary - JCI Black.png|#ffffff|black">JCI Black (白底黑字)</option>
+                <option value="New JCI Logo_Primary.png|#ffffff|jci-blue">Primary (白底藍字)</option>
+                <option value="New JCI Logo_Secondary - White on JCI Blue.png|#0097D7|white">Blue Background (藍底白字)</option>
+                <option value="New JCI Logo_Secondary - White.png|#1c1f2a|white">Dark Background (深底白字)</option>
+                <option value="New JCI Logo_Secondary - Inverted Color on JCI Black.png|#000000|white">Inverted (黑底白字)</option>
+                <option value="New JCI Logo_Secondary - JCI Black.png|#ffffff|black">Black Text (白底黑字)</option>
             </select>
         </div>
         <div class="input-group">
-            <label>文字顏色 (Text Color)</label>
+            <label>輸出尺寸 (寬度)</label>
+            <select id="sizeSelect">
+                <option value="100">100px</option>
+                <option value="200">200px</option>
+                <option value="300">300px</option>
+                <option value="400">400px</option>
+                <option value="500">500px</option>
+                <option value="600">600px</option>
+                <option value="700">700px</option>
+                <option value="800">800px</option>
+                <option value="900">900px</option>
+                <option value="1000" selected>1000px</option>
+            </select>
+        </div>
+        <div class="input-group" style="display:none;">
             <select id="colorSelect" onchange="updateLogo()">
-                <option value="text-jci-blue">JCI Blue (#0097D7)</option>
-                <option value="text-white">White (#FFFFFF)</option>
-                <option value="text-black">JCI Black (#1C1F2A)</option>
+                <option value="text-jci-blue">JCI Blue</option>
+                <option value="text-white">White</option>
+                <option value="text-black">Black</option>
             </select>
         </div>
         <button class="btn-download" onclick="downloadImage()">下載圖片 / Save Image</button>
@@ -129,11 +140,7 @@
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
 
-        window.onload = function() { 
-            document.getElementById('chapterInput1').value = "Dayuan"; 
-            document.getElementById('chapterInput2').value = ""; 
-            changeLogoStyle(); 
-        };
+        window.onload = function() { changeLogoStyle(); };
 
         function changeLogoStyle() {
             var parts = document.getElementById('logoSelect').value.split('|');
@@ -157,17 +164,14 @@
             var line1Div = document.getElementById('chapterTextLine1');
             var line2Div = document.getElementById('chapterTextLine2');
 
-            // 處理 Line 1
             line1Div.textContent = input1;
             line1Div.className = 'text-line ' + colorClass;
 
-            // 處理 Line 2：若有內容則顯示，無內容則隱藏
             if (input2.trim() !== "") {
                 line2Div.textContent = input2;
-                line2Div.className = 'text-line ' + colorClass; // 顯示
+                line2Div.className = 'text-line ' + colorClass;
             } else {
-                line2Div.textContent = "";
-                line2Div.className = 'text-line ' + colorClass + ' hidden'; // 隱藏
+                line2Div.className = 'text-line ' + colorClass + ' hidden';
             }
         }
 
@@ -176,46 +180,38 @@
             var chapterName = document.getElementById('chapterInput1').value;
             var btn = document.querySelector('.btn-download');
             
+            // 計算動態縮放比例
+            var targetWidth = parseInt(document.getElementById('sizeSelect').value);
+            var currentWidth = element.offsetWidth;
+            var dynamicScale = targetWidth / currentWidth;
+
             btn.innerText = "處理中...";
             btn.disabled = true;
 
-            // 執行 html2canvas 擷取圖片
             html2canvas(element, { 
                 backgroundColor: null, 
-                scale: 5, 
+                scale: dynamicScale, 
                 useCORS: true 
             }).then(canvas => {
-                
-                // 統一使用 toBlob 避開 Data URL/渲染問題
                 canvas.toBlob(function(blob) {
                     const url = URL.createObjectURL(blob);
                     
                     if (isMobile()) {
-                        // --- 行動裝置：導航到全螢幕圖片，讓使用者長按儲存 ---
                         window.location.href = url; 
-                        
-                        // 導航後，這個 alert 會被放在瀏覽器棧中，使用者按返回後會看到
-                        alert("✅ 圖片已成功生成！\n\n步驟：\n1. 請長按 (或點擊分享鍵) 螢幕上的圖片。\n2. 選擇「儲存圖片/儲存到相簿」。");
-                        
-                        // 注意：這裡不清除 url (revokeObjectURL) 因為當前頁面正在使用它
+                        alert("✅ 圖片已生成 (" + targetWidth + "px)！\n\n步驟：\n1. 長按螢幕上的圖片。\n2. 選擇「儲存圖片/儲存到相簿」。\n3. 完成後按手機的「返回鍵」回到本頁。");
                     } else {
-                        // --- 桌電：觸發自動下載 ---
                         var link = document.createElement('a');
-                        link.download = `JCI_Logo_${chapterName}.png`;
+                        link.download = `JCI_Logo_${chapterName}_${targetWidth}px.png`;
                         link.href = url;
-                        
                         document.body.appendChild(link);
                         link.click(); 
                         document.body.removeChild(link);
-                        
-                        URL.revokeObjectURL(url); // 清除記憶體
+                        URL.revokeObjectURL(url);
                     }
                     
                     btn.innerText = "下載圖片 / Save Image";
                     btn.disabled = false;
-                    
                 }, 'image/png', 1.0); 
-
             }).catch(err => {
                 console.error(err);
                 alert("下載失敗，請換個瀏覽器試試看。");
@@ -224,9 +220,4 @@
         }
     </script>
 </body>
-
 </html>
-
-
-
-
