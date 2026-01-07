@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (V4.5 Precision Limit)</title>
+    <title>JCI Logo Generator (V4.7 Minimalist)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 全局字型與重置 */
@@ -66,19 +66,25 @@
         }
         input:focus, select:focus { border-color: #0097D7; outline: none; }
         
-        /* 警告訊息樣式 */
+        /* 雙語警告訊息樣式 */
         .warning-msg {
             display: none; 
             color: #dc3545; 
             font-size: 13px;
-            font-weight: bold;
-            margin-top: 4px;
+            line-height: 1.5;
+            margin-top: 6px;
             background-color: #ffe6e6;
-            padding: 8px 12px;
+            padding: 10px 12px;
             border-radius: 6px;
             border: 1px solid #ffcccc;
             width: 100%;
             animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .warning-divider {
+            border: 0;
+            border-top: 1px dashed #ffb3b3;
+            margin: 6px 0;
         }
 
         @keyframes fadeIn {
@@ -143,10 +149,7 @@
             left: 11.8%;
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: bold;
-            
-            /* ★ 關鍵修正：從 72% 改為 67%，這會讓警告線剛好落在盾牌右緣 ★ */
-            max-width: 55%;
-            
+            max-width: 55%; /* 維持 55% 嚴格限制 */
             text-align: left;
             overflow: visible; 
         }
@@ -221,9 +224,13 @@
         <div class="input-group">
             <label>分會名稱 (Line 1)</label>
             <input type="text" id="chapterInput1" value="Dayuan" oninput="updateLogo()">
+            
             <div id="lengthWarning" class="warning-msg">
-                ⚠️ 文字過長 <br>
+                <strong>⚠️ 文字過長 (Point 4)</strong><br>
                 已超出盾牌右緣範圍，請將多餘文字移至第二行。
+                <hr class="warning-divider">
+                <strong>⚠️ Text too long (Point 4)</strong><br>
+                Exceeds the shield's right edge. Please move extra text to Line 2.
             </div>
         </div>
         <div class="input-group">
@@ -243,10 +250,10 @@
         <div class="input-group">
             <label>輸出品質</label>
             <select id="sizeSelect">
-                <option value="1">標準 (社群媒體)</option>
-                <option value="2">清晰 (簡報使用)</option>
-                <option value="3" selected>高品質 (印刷/大螢幕)</option>
-                <option value="5">超高解析 (專業輸出)</option>
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="3" selected>3x</option>
+                <option value="5">5x</option>
             </select>
         </div>
         <div class="input-group" style="display:none;">
@@ -325,8 +332,6 @@
                 line2Div.classList.add('hidden');
             }
 
-            // ★★★ 智慧偵測修正 ★★★
-            // max-width 已設為 50%。只要 scrollWidth (實際文字寬度) 超過 clientWidth (限制寬度)，就顯示警告
             var warningDiv = document.getElementById('lengthWarning');
             if (line1Div.scrollWidth > line1Div.clientWidth) {
                 warningDiv.style.display = 'block'; 
