@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (Final Release)</title>
+    <title>JCI Logo Generator (Tighter Text)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 全局字型與重置 */
@@ -122,12 +122,12 @@
 
         .text-line { 
             font-size: 8.4cqi;
-            line-height: 0.8;    /* 維持緊湊行高 */
+            line-height: 0.8;
             white-space: nowrap; 
-            letter-spacing: 0.03em; /* ★ 修正點：增加字距，解決重疊 ★ */
+            letter-spacing: -0.03em; /* ★ 修正：改為負值，讓字更緊密 ★ */
         }
 
-        /* 第二行獨立間距，解決垂直重疊 */
+        /* 第二行獨立間距 */
         #chapterTextLine2 { margin-top: 1.5cqi; }
 
         .hidden { display: none !important; }
