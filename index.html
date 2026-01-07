@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (Manual Save)</title>
+    <title>JCI Logo Generator (Fixed V4.1)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 全局字型與重置 */
@@ -66,7 +66,6 @@
         }
         input:focus, select:focus { border-color: #0097D7; outline: none; }
         
-        /* 按鈕樣式 (文字改為生成圖片) */
         .btn-download { 
             padding: 10px 24px; 
             font-size: 15px; 
@@ -96,7 +95,6 @@
             border-radius: 4px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
             
-            /* 編輯時鎖定長按，避免存到還沒生成的圖 */
             pointer-events: none; 
             user-select: none;
             -webkit-user-select: none;
@@ -110,7 +108,6 @@
             border: 2px dashed #0097D7;
         }
         
-        /* 確保生成的圖片能被選取 */
         .preview-container.generated-mode img {
              pointer-events: auto !important;
              -webkit-touch-callout: default !important;
@@ -126,7 +123,7 @@
             border-radius: 4px;
         }
 
-        /* --- 品牌規範核心定位 (您的最終參數) --- */
+        /* --- 品牌規範核心定位 --- */
         .chapter-name-wrapper {
             position: absolute;
             top: 66.2%;
@@ -310,12 +307,12 @@
         }
 
         function resetPreviewState() {
+            // 讓編輯層顯示，結果圖隱藏
             document.getElementById('captureTarget').style.display = 'block'; 
             document.getElementById('finalResultImg').style.display = 'none'; 
             document.getElementById('previewBox').classList.remove('generated-mode'); 
         }
 
-        // 核心功能：只生成，不下載
         async function generateImage() {
             var element = document.getElementById('captureTarget');
             var btn = document.querySelector('.btn-download');
@@ -324,6 +321,12 @@
             btn.innerText = "處理中...";
             btn.disabled = true;
 
+            // ★ 修正：強制先執行一次重置，確保 captureTarget 是可見的，不然 html2canvas 會抓到空的
+            resetPreviewState();
+            
+            // 給瀏覽器一點時間重繪 DOM (極短暫延遲)
+            await new Promise(resolve => setTimeout(resolve, 50));
+
             try {
                 const canvas = await html2canvas(element, { 
                     backgroundColor: null, 
@@ -331,28 +334,25 @@
                     useCORS: true 
                 });
 
-                // 轉為 Base64 圖片
                 const imgData = canvas.toDataURL("image/png");
 
                 // 1. 隱藏編輯層
                 document.getElementById('captureTarget').style.display = 'none';
                 
-                // 2. 顯示結果圖 (這張圖可以被長按)
+                // 2. 顯示結果圖
                 var finalImg = document.getElementById('finalResultImg');
                 finalImg.src = imgData;
                 finalImg.style.display = 'block';
                 
-                // 3. 解鎖容器，允許長按
+                // 3. 解鎖容器
                 document.getElementById('previewBox').classList.add('generated-mode');
 
-                // 4. 跳出簡單明確的提示 (不再嘗試自動下載)
                 alert("✅ 圖片已生成！\n\n請直接「長按」下方的圖片，並選擇「儲存到相簿」。\n(若需修改文字，輸入新內容即可恢復編輯模式)");
 
             } catch (err) {
                 console.error(err);
                 alert("生成失敗，請重新整理頁面再試。");
             } finally {
-                // 重置按鈕
                 btn.innerText = "生成圖片 / Generate Image";
                 btn.disabled = false;
             }
