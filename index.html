@@ -2,13 +2,13 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JCI Logo Generator (Pro Mobile Ver.)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JCI Logo Generator (App Experience)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 全局字型與重置 */
         @font-face { font-family: 'Plus Jakarta Sans'; src: url('PlusJakartaSans-Bold.ttf') format('truetype'); font-weight: bold; }
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             background-color: #f8f9fa; 
@@ -21,10 +21,10 @@
             color: #333;
         }
 
-        /* --- 1. App 頂部導航列 (Navbar) --- */
+        /* --- 1. App 頂部導航列 --- */
         .navbar {
             width: 100%;
-            background-color: #0097D7; /* JCI Blue */
+            background-color: #0097D7;
             color: white;
             padding: 16px 0;
             text-align: center;
@@ -37,7 +37,7 @@
             z-index: 100;
         }
 
-        /* --- 2. 操作面板 (Controls) --- */
+        /* --- 2. 操作面板 --- */
         .controls { 
             background: white; 
             padding: 24px; 
@@ -82,7 +82,7 @@
         .btn-download:hover { background-color: #007bb5; }
         .btn-download:disabled { background-color: #ccc; box-shadow: none; cursor: not-allowed; }
 
-        /* --- 3. 預覽區 (Preview) --- */
+        /* --- 3. 預覽區 (鎖定互動) --- */
         .preview-container { 
             position: relative; 
             width: 550px;       
@@ -94,16 +94,21 @@
             margin: 0 auto;
             border-radius: 4px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            
+            /* ★ 關鍵修改：禁止滑鼠/手指互動，防止長按預覽圖 ★ */
+            pointer-events: none; 
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .logo-wrapper { position: relative; width: 100%; container-type: inline-size; }
         .logo-wrapper img { width: 100%; display: block; }
         
-        /* --- 品牌規範核心定位 (保持不變) --- */
+        /* 品牌規範核心定位 */
         .chapter-name-wrapper {
             position: absolute;
-            top: 66%;         /* Final: 66% */
-            left: 12%;        /* Final: 12% */
+            top: 66%;
+            left: 12%;
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: bold;
             max-width: 72%;
@@ -111,51 +116,56 @@
         }
 
         .text-line { 
-            font-size: 8.4cqi;  /* 約 60pt */
-            line-height: 0.8;   /* Final: 0.8 (緊湊行距) */
+            font-size: 8.4cqi;
+            line-height: 0.8;
             white-space: nowrap; 
             letter-spacing: 0px; 
         }
+
+        /* 修正文字重疊 */
+        #chapterTextLine2 { margin-top: 1.5cqi; }
 
         .hidden { display: none !important; }
         .text-jci-blue { color: #0097D7 !important; }
         .text-white { color: #ffffff !important; } 
         .text-black { color: #1c1f2a !important; }
 
-        /* --- 4. 底部版權聲明 (Footer) --- */
+        /* --- 4. 底部版權聲明 --- */
         .footer { 
-            margin-top: auto; /* 推到底部 */
-            padding: 30px 20px;
+            margin-top: auto; 
+            padding: 40px 20px; 
             width: 100%; 
             text-align: center; 
-            color: #888; 
-            font-size: 13px;
-            line-height: 1.6;
+            color: #666; 
+            font-size: 14px;
+            line-height: 1.8; 
             background-color: #fff;
             border-top: 1px solid #eee;
         }
         .footer strong { color: #0097D7; font-weight: bold; }
-        .copyright-warning { margin-top: 8px; font-size: 12px; color: #aaa; font-style: italic; }
+        .footer-block { margin-bottom: 15px; } 
 
-        /* --- 5. 手機版專屬優化 (RWD) --- */
+        .copyright-warning { 
+            margin-top: 20px; 
+            padding-top: 15px;
+            border-top: 1px dashed #eee; 
+            font-size: 12px; 
+            color: #aaa; 
+            font-style: italic; 
+            line-height: 1.5;
+        }
+
+        /* --- 手機版 RWD --- */
         @media (max-width: 600px) {
             .controls {
                 flex-direction: column;
-                align-items: stretch; /* 讓所有元件滿版 */
+                align-items: stretch; 
                 gap: 12px;
                 padding: 20px;
             }
-            
             .input-group { width: 100%; }
-            input, select { width: 100%; min-width: auto; } /* 輸入框滿寬 */
-            
-            .btn-download { 
-                width: 100%; /* 按鈕滿寬 */
-                margin-top: 8px;
-                height: 48px; /* 手機上按鈕做高一點更好按 */
-                font-size: 16px;
-            }
-
+            input, select { width: 100%; min-width: auto; }
+            .btn-download { width: 100%; margin-top: 8px; height: 48px; font-size: 16px; }
             .navbar { font-size: 18px; padding: 14px 0; margin-bottom: 20px; }
         }
     </style>
@@ -213,8 +223,16 @@
     </div>
 
     <div class="footer">
-        Designed & Developed by <strong>Chenghui Lin</strong> (2023 President, JCI Dayuan)<br>
-        台灣&emsp;桃園市大園國際青年商會 2023年會長 林振暉 製作 &copy; 2025
+        <div class="footer-block">
+            Designed & Developed by <strong>Chenghui Lin</strong><br>
+            (2023 President, JCI Dayuan)
+        </div>
+        
+        <div class="footer-block">
+            桃園市大園國際青年商會 2023年會長 林振暉 製作<br>
+            Copyright &copy; 2026
+        </div>
+
         <div class="copyright-warning">
             本程式由 2023 大園青商 林振暉 會長為服務 JCI 夥伴免費開發。<br>
             歡迎廣泛使用，惟請尊重原創開發者成果，請勿私自盜用、修改或宣稱為個人作品。
@@ -255,7 +273,7 @@
             }
         }
 
-        function downloadImage() {
+        async function downloadImage() {
             var element = document.getElementById('captureTarget');
             var chapterName = document.getElementById('chapterInput1').value;
             var btn = document.querySelector('.btn-download');
@@ -264,33 +282,60 @@
             btn.innerText = "處理中...";
             btn.disabled = true;
 
-            html2canvas(element, { 
-                backgroundColor: null, 
-                scale: qualityScale * 2, 
-                useCORS: true 
-            }).then(canvas => {
-                canvas.toBlob(function(blob) {
-                    const url = URL.createObjectURL(blob);
-                    if (isMobile()) {
-                        window.location.href = url; 
-                        alert("✅ 圖片已生成！\n\n1. 請長按圖片。\n2. 選擇「儲存圖片」或「加入照片」。\n3. 完成後按返回鍵。");
+            try {
+                const canvas = await html2canvas(element, { 
+                    backgroundColor: null, 
+                    scale: qualityScale * 2, 
+                    useCORS: true 
+                });
+
+                canvas.toBlob(async function(blob) {
+                    const fileName = `JCI_Logo_${chapterName}.png`;
+                    const file = new File([blob], fileName, { type: 'image/png' });
+
+                    // ★ 手機版：嘗試使用系統原生分享 (最接近直接下載的體驗) ★
+                    if (navigator.canShare && navigator.canShare({ files: [file] }) && isMobile()) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: '下載 JCI Logo',
+                                text: '這是您生成的 JCI Logo'
+                            });
+                            // 分享成功後恢復按鈕
+                            btn.innerText = "下載圖片 / Save Image";
+                            btn.disabled = false;
+                        } catch (err) {
+                            // 使用者取消分享或不支援，改用舊方法
+                            console.log("Share API cancelled/failed", err);
+                            forceDownload(blob, fileName);
+                        }
                     } else {
-                        var link = document.createElement('a');
-                        link.download = `JCI_Logo_${chapterName}.png`;
-                        link.href = url;
-                        document.body.appendChild(link);
-                        link.click(); 
-                        document.body.removeChild(link);
-                        URL.revokeObjectURL(url);
+                        // ★ 電腦版或不支援分享的手機：傳統下載 ★
+                        forceDownload(blob, fileName);
                     }
+
+                    // 恢復按鈕 (放在這裡是為了確保 forceDownload 後也會恢復)
                     btn.innerText = "下載圖片 / Save Image";
                     btn.disabled = false;
+
                 }, 'image/png', 1.0); 
-            }).catch(err => {
+
+            } catch (err) {
                 console.error(err);
                 alert("生成失敗，請稍後再試！");
                 btn.disabled = false;
-            });
+            }
+        }
+
+        function forceDownload(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = url;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>
