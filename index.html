@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (Fixed V4.1)</title>
+    <title>JCI Logo Generator (V4.3 PC/Mobile)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 全局字型與重置 */
@@ -100,7 +100,7 @@
             -webkit-user-select: none;
         }
 
-        /* 生成模式：允許長按，並加框提示 */
+        /* 生成模式：允許互動 (長按或右鍵) */
         .preview-container.generated-mode {
             pointer-events: auto !important;
             user-select: auto !important;
@@ -116,7 +116,6 @@
         .logo-wrapper { position: relative; width: 100%; container-type: inline-size; }
         .logo-wrapper img { width: 100%; display: block; }
         
-        /* 結果圖 (預設隱藏) */
         #finalResultImg {
             width: 100%;
             display: none; 
@@ -185,7 +184,6 @@
             line-height: 1.5;
         }
 
-        /* --- 手機版 RWD --- */
         @media (max-width: 600px) {
             .controls {
                 flex-direction: column;
@@ -258,12 +256,10 @@
             Designed & Developed by <strong>Chenghui Lin</strong><br>
             (2023 President, JCI Dayuan)
         </div>
-        
         <div class="footer-block">
             <a href="https://www.jcidayuan.site/" target="_blank" class="footer-link">桃園市大園國際青年商會</a> 2023年會長 林振暉 製作<br>
             Copyright &copy; 2026 Chenghui Lin. All rights reserved.
         </div>
-
         <div class="copyright-warning">
             本程式由 2023 大園青商 林振暉 會長為服務 JCI 夥伴免費開發。<br>
             歡迎廣泛使用，惟請尊重原創開發者成果，請勿私自盜用、修改或宣稱為個人作品。
@@ -271,6 +267,16 @@
     </div>
 
     <script>
+        // 判斷是否為行動裝置 (手機/平板)
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // 判斷是否為 iOS (為了限制解析度)
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+
         window.onload = function() { changeLogoStyle(); };
 
         function changeLogoStyle() {
@@ -285,7 +291,6 @@
             updateLogo();
         }
 
-        // 修改內容時，重置回編輯模式
         function updateLogo() {
             var input1 = document.getElementById('chapterInput1').value;
             var input2 = document.getElementById('chapterInput2').value;
@@ -302,12 +307,10 @@
             } else {
                 line2Div.classList.add('hidden');
             }
-
             resetPreviewState();
         }
 
         function resetPreviewState() {
-            // 讓編輯層顯示，結果圖隱藏
             document.getElementById('captureTarget').style.display = 'block'; 
             document.getElementById('finalResultImg').style.display = 'none'; 
             document.getElementById('previewBox').classList.remove('generated-mode'); 
@@ -321,33 +324,43 @@
             btn.innerText = "處理中...";
             btn.disabled = true;
 
-            // ★ 修正：強制先執行一次重置，確保 captureTarget 是可見的，不然 html2canvas 會抓到空的
+            // iOS 安全倍率限制
+            var finalScale = qualityScale * 2;
+            if (isIOS() && finalScale > 7) {
+                finalScale = 7; 
+            }
+
             resetPreviewState();
-            
-            // 給瀏覽器一點時間重繪 DOM (極短暫延遲)
             await new Promise(resolve => setTimeout(resolve, 50));
 
             try {
                 const canvas = await html2canvas(element, { 
                     backgroundColor: null, 
-                    scale: qualityScale * 2, 
+                    scale: finalScale, 
                     useCORS: true 
                 });
 
                 const imgData = canvas.toDataURL("image/png");
 
-                // 1. 隱藏編輯層
                 document.getElementById('captureTarget').style.display = 'none';
                 
-                // 2. 顯示結果圖
                 var finalImg = document.getElementById('finalResultImg');
                 finalImg.src = imgData;
                 finalImg.style.display = 'block';
                 
-                // 3. 解鎖容器
                 document.getElementById('previewBox').classList.add('generated-mode');
 
-                alert("✅ 圖片已生成！\n\n請直接「長按」下方的圖片，並選擇「儲存到相簿」。\n(若需修改文字，輸入新內容即可恢復編輯模式)");
+                // ★★★ 核心修改：區分電腦與手機的提示語 ★★★
+                let msg = "";
+                if (isMobile()) {
+                    // 手機版提示
+                    msg = "✅ 圖片已生成！\n\n請直接「長按」下方的圖片，並選擇「儲存到相簿」。\n(若需修改文字，輸入新內容即可恢復編輯模式)";
+                } else {
+                    // 電腦版提示
+                    msg = "✅ 圖片已生成！\n\n請在下方的圖片上「按右鍵」，並選擇「另存圖片」來下載。\n(若需修改文字，輸入新內容即可恢復編輯模式)";
+                }
+                
+                alert(msg);
 
             } catch (err) {
                 console.error(err);
