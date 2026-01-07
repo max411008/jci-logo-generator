@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (V4.4 Guideline Check)</title>
+    <title>JCI Logo Generator (V4.5 Precision Limit)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 全局字型與重置 */
@@ -66,10 +66,10 @@
         }
         input:focus, select:focus { border-color: #0097D7; outline: none; }
         
-        /* ★★★ 新增：警告訊息樣式 ★★★ */
+        /* 警告訊息樣式 */
         .warning-msg {
-            display: none; /* 預設隱藏 */
-            color: #dc3545; /* 紅色 */
+            display: none; 
+            color: #dc3545; 
             font-size: 13px;
             font-weight: bold;
             margin-top: 4px;
@@ -144,11 +144,11 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: bold;
             
-            /* ★ 關鍵設定：限制最大寬度為 72% (這正好是盾牌右緣的位置) ★ */
-            max-width: 72%;
+            /* ★ 關鍵修正：從 72% 改為 67%，這會讓警告線剛好落在盾牌右緣 ★ */
+            max-width: 67%;
             
             text-align: left;
-            overflow: visible; /* 讓 JS 可以偵測到實際寬度 */
+            overflow: visible; 
         }
 
         .text-line { 
@@ -325,13 +325,13 @@
                 line2Div.classList.add('hidden');
             }
 
-            // ★★★ 智慧偵測：檢查是否超出 Point 4 (盾牌右緣) ★★★
-            // max-width 設為 72%。如果 scrollWidth (實際文字寬) 大於 clientWidth (容器限制寬)，代表溢出
+            // ★★★ 智慧偵測修正 ★★★
+            // max-width 已設為 67%。只要 scrollWidth (實際文字寬度) 超過 clientWidth (限制寬度)，就顯示警告
             var warningDiv = document.getElementById('lengthWarning');
             if (line1Div.scrollWidth > line1Div.clientWidth) {
-                warningDiv.style.display = 'block'; // 顯示警告
+                warningDiv.style.display = 'block'; 
             } else {
-                warningDiv.style.display = 'none';  // 隱藏警告
+                warningDiv.style.display = 'none';  
             }
 
             resetPreviewState();
