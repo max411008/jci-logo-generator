@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (V12.0 Auto-Transparent)</title>
+    <title>JCI Logo Generator (V13.0 UI Polish)</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
@@ -64,16 +64,15 @@
 
         .btn-png { background-color: #0097D7; }
         .btn-svg { background-color: #20c997; } 
+        
+        .btn-hint { font-size: 12px; color: #666; text-align: center; margin-top: -5px; }
 
         .preview-container { 
             position: relative; width: 550px; padding: 20px; max-width: 95%; 
             border: 1px solid #eee; background-color: #fff; box-sizing: border-box; 
             margin: 0 auto; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
             text-align: center;
-            /* 這裡設定背景圖案 (方格) 代表透明，讓使用者知道這裡是透明的 */
-            background-image: linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee), linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee);
-            background-size: 20px 20px;
-            background-position: 0 0, 10px 10px;
+            /* 移除醜陋的方格背景，改回純色顯示以便預覽 */
         }
         
         #svg-preview-box svg { width: 100%; height: auto; display: block; }
@@ -125,8 +124,10 @@
         </div>
         
         <div class="btn-group-vertical">
-            <button class="btn-base btn-png" onclick="downloadFile('png')">下載 PNG 圖片 (透明背景)</button>
+            <button class="btn-base btn-png" onclick="downloadFile('png')">下載 PNG 圖片</button>
+            <div class="btn-hint">(輸出為透明背景)</div>
             <button class="btn-base btn-svg" onclick="downloadFile('svg')">下載 SVG (純向量)</button>
+            <div class="btn-hint">(輸出為透明背景)</div>
         </div>
     </div>
 
@@ -147,7 +148,9 @@
 
     <script>
         let currentFont = null;
-        let finalSvgString = "";
+        // 用兩個變數分別儲存：有背景的(預覽用) 和 無背景的(下載用)
+        let svgForPreview = ""; 
+        let svgForDownload = "";
 
         // 1. 載入字體
         window.onload = function() {
@@ -167,20 +170,18 @@
             box.innerHTML = msg;
         }
 
-        // 2. 核心：更新預覽與去背
+        // 2. 核心：更新預覽與準備去背版 SVG
         async function updatePreview() {
             if (!currentFont) return;
             document.getElementById('error-box').style.display = 'none';
 
             const parts = document.getElementById('logoSelect').value.split('|');
             const fileName = encodeURIComponent(parts[0]).replace(/%2F/g, "/"); 
-            const bgColor = parts[1]; // 這是我們要「移除」的顏色
+            const bgColorToRemove = parts[1]; // 這是我們要偵測並移除的顏色
             const colorType = parts[2];
 
-            // 設定預覽區的背景色 (僅視覺，不影響下載)
-            // 如果是深色模式，我們還是顯示深色背景讓使用者看得到白字
-            // 下載時這層 CSS 背景不會被帶走
-            document.getElementById('previewContainer').style.backgroundColor = bgColor;
+            // 設定預覽區的背景色 (讓使用者能看清楚白字)
+            document.getElementById('previewContainer').style.backgroundColor = bgColorToRemove;
 
             const colors = { 'jci-blue': '#0097D7', 'white': '#FFFFFF', 'black': '#1C1F2A' };
             const textColor = colors[colorType] || '#0097D7';
@@ -190,42 +191,43 @@
                 if (!resp.ok) throw new Error("讀取失敗: " + fileName);
                 let rawSvg = await resp.text();
 
-                // 解析 SVG
+                // --- 建立兩個 DOM 解析器，一個給預覽(保留背景)，一個給下載(去除背景) ---
                 const parser = new DOMParser();
-                const doc = parser.parseFromString(rawSvg, "image/svg+xml");
-                const svgEl = doc.documentElement;
+                const docPreview = parser.parseFromString(rawSvg, "image/svg+xml");
+                const docDownload = parser.parseFromString(rawSvg, "image/svg+xml");
+                
+                const svgElPreview = docPreview.documentElement;
+                const svgElDownload = docDownload.documentElement;
 
-                // ★★★ 智慧去背：移除與背景色相同的圖層 ★★★
-                // 遍歷所有 path, rect, polygon
-                const elements = svgEl.querySelectorAll('path, rect, polygon, circle');
+                // --- 處理下載版 (智慧去背) ---
+                const elements = svgElDownload.querySelectorAll('path, rect, polygon, circle');
                 elements.forEach(el => {
                     const fill = el.getAttribute('fill');
-                    // 簡單的比對：如果 SVG 裡的 fill 等於我們設定的背景色，就刪掉它
-                    // 注意：這裡要做大小寫不敏感比對
-                    if (fill && fill.toLowerCase() === bgColor.toLowerCase()) {
-                        el.remove();
+                    if (fill && fill.toLowerCase() === bgColorToRemove.toLowerCase()) {
+                        el.remove(); // 移除與背景色相同的色塊
                     }
-                    // 針對 JCI Black 這種特殊色 (#1c1f2a) 也要檢查
-                    if (bgColor.toLowerCase() === '#1c1f2a' && fill && fill.toLowerCase() === '#1c1f2a') {
+                    // 特別處理 JCI Black
+                    if (bgColorToRemove.toLowerCase() === '#1c1f2a' && fill && fill.toLowerCase() === '#1c1f2a') {
                         el.remove();
                     }
                 });
 
-                // 尺寸處理
+                // --- 共用尺寸計算 ---
                 let width = 1000, height = 665;
-                const viewBox = svgEl.getAttribute('viewBox');
+                const viewBox = svgElPreview.getAttribute('viewBox');
                 if (viewBox) {
                     const vb = viewBox.split(/[\s,]+/);
-                    width = parseFloat(vb[2]);
-                    height = parseFloat(vb[3]);
+                    width = parseFloat(vb[2]); height = parseFloat(vb[3]);
                 } else {
-                    width = parseFloat(svgEl.getAttribute('width')) || 1000;
-                    height = parseFloat(svgEl.getAttribute('height')) || 665;
-                    svgEl.setAttribute('viewBox', `0 0 ${width} ${height}`);
+                    width = parseFloat(svgElPreview.getAttribute('width')) || 1000;
+                    height = parseFloat(svgElPreview.getAttribute('height')) || 665;
+                    svgElPreview.setAttribute('viewBox', `0 0 ${width} ${height}`);
+                    svgElDownload.setAttribute('viewBox', `0 0 ${width} ${height}`);
                 }
-                svgEl.setAttribute('xmlns', "http://www.w3.org/2000/svg");
+                svgElPreview.setAttribute('xmlns', "http://www.w3.org/2000/svg");
+                svgElDownload.setAttribute('xmlns', "http://www.w3.org/2000/svg");
 
-                // 文字座標
+                // --- 文字計算與生成 ---
                 const fontSize = width * 0.08;
                 const textX = width * 0.118;
                 const textYStart = (height * 0.662) + fontSize; 
@@ -234,11 +236,9 @@
                 const t1 = document.getElementById('chapterInput1').value;
                 const t2 = document.getElementById('chapterInput2').value;
 
-                // 警告偵測
                 const w1 = currentFont.getAdvanceWidth(t1, fontSize);
                 document.getElementById('lengthWarning').style.display = (w1 > width * 0.55) ? 'block' : 'none';
 
-                // 生成文字路徑
                 const p1 = currentFont.getPath(t1, textX, textYStart, fontSize);
                 p1.fill = textColor;
                 const p1Svg = p1.toSVG(2);
@@ -250,16 +250,28 @@
                     p2Svg = p2.toSVG(2);
                 }
 
-                // 插入 DOM
+                // --- 插入文字到兩個 SVG 版本中 ---
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = p1Svg + p2Svg;
-                while (tempDiv.firstChild) {
-                    svgEl.appendChild(tempDiv.firstChild);
+                
+                // 複製節點分別插入
+                const textNodesForPreview = tempDiv.cloneNode(true);
+                while (textNodesForPreview.firstChild) {
+                    svgElPreview.appendChild(textNodesForPreview.firstChild);
+                }
+                
+                const textNodesForDownload = tempDiv.cloneNode(true);
+                while (textNodesForDownload.firstChild) {
+                    svgElDownload.appendChild(textNodesForDownload.firstChild);
                 }
 
-                // 輸出
-                finalSvgString = new XMLSerializer().serializeToString(doc);
-                document.getElementById('svg-preview-box').innerHTML = finalSvgString;
+                // --- 序列化並儲存 ---
+                const serializer = new XMLSerializer();
+                svgForPreview = serializer.serializeToString(docPreview);
+                svgForDownload = serializer.serializeToString(docDownload); // 這是去背後的版本
+                
+                // 更新網頁預覽 (顯示有背景的版本)
+                document.getElementById('svg-preview-box').innerHTML = svgForPreview;
 
             } catch (err) {
                 console.error(err);
@@ -267,8 +279,9 @@
             }
         }
 
+        // 3. 下載功能 (使用去背版的 SVG)
         async function downloadFile(type) {
-            if (!finalSvgString) return;
+            if (!svgForDownload) return;
 
             const btn = document.querySelector(`.btn-${type}`);
             const originalText = btn.innerText;
@@ -278,17 +291,19 @@
 
             try {
                 if (type === 'svg') {
-                    const blob = new Blob([finalSvgString], {type: "image/svg+xml;charset=utf-8"});
+                    const blob = new Blob([svgForDownload], {type: "image/svg+xml;charset=utf-8"});
                     triggerDownload(URL.createObjectURL(blob), name + ".svg");
-                    alert("✅ SVG 下載成功！\n背景色塊已自動移除 (透明背景)。");
+                    alert("✅ SVG 下載成功！\n(已自動去除背景色塊)");
                 } 
                 else {
+                    // PNG 下載
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     const img = new Image();
                     const scale = parseFloat(document.getElementById('sizeSelect').value);
                     
-                    const svgBlob = new Blob([finalSvgString], {type: "image/svg+xml;charset=utf-8"});
+                    // 使用去背版的 SVG
+                    const svgBlob = new Blob([svgForDownload], {type: "image/svg+xml;charset=utf-8"});
                     const url = URL.createObjectURL(svgBlob);
 
                     await new Promise((resolve, reject) => {
@@ -309,12 +324,13 @@
                     
                     if (/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         const win = window.open();
-                        win.document.write('<style>body{background:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgxMHYxMEgwem0xMCAxMGgxMHYxMEgxMHoiIGZpbGw9IiNlZWUiLz48L3N2Zz4=") repeat;}</style>');
-                        win.document.write('<img src="' + pngData + '" style="width:100%"/>');
-                        alert("✅ 圖片已生成！\n請在新視窗長按圖片儲存。\n(背景顯示為方格代表透明)");
+                        // 在手機新視窗中加上方格背景，讓使用者確認是透明的
+                        win.document.write('<style>body{background:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgxMHYxMEgwem0xMCAxMGgxMHYxMEgxMHoiIGZpbGw9IiNlZWUiLz48L3N2Zz4=") repeat; display:flex; justify-content:center; align-items:center; min-height:100vh; margin:0;}</style>');
+                        win.document.write('<img src="' + pngData + '" style="max-width:100%; height:auto;"/>');
+                        alert("✅ 圖片已生成！\n請在新視窗長按圖片儲存。\n(背景顯示方格即代表透明)");
                     } else {
                         triggerDownload(pngData, name + ".png");
-                        alert("✅ PNG 下載成功 (" + canvas.width + "px)\n背景為透明。");
+                        alert("✅ PNG 下載成功 (" + canvas.width + "px)\n(背景為透明)");
                     }
                 }
             } catch (e) {
