@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (Fixed Version)</title>
+    <meta name="app-version" content="v2.0">
+    <title>JCI Logo Generator</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
@@ -44,7 +45,6 @@
             padding: 10px 14px; font-size: 15px; 
             border: 1px solid #e0e0e0; border-radius: 8px; 
             width: 100%; background-color: #fdfdfd;
-            transition: border-color 0.2s;
         }
         
         .warning-msg {
@@ -53,20 +53,17 @@
         }
 
         .btn-group-vertical { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 250px; }
-        
         .btn-base {
             padding: 0 20px; font-size: 15px; font-weight: bold; color: white;
             border: none; border-radius: 8px; cursor: pointer; height: 44px; width: 100%;
-            display: flex; align-items: center; justify-content: center; transition: filter 0.2s;
+            display: flex; align-items: center; justify-content: center;
         }
         .btn-base:hover { filter: brightness(1.1); }
-        .btn-base:disabled { background-color: #ccc !important; cursor: not-allowed; }
+        .btn-base:disabled { background-color: #ccc !important; }
 
         .btn-png { background-color: #0097D7; }
         .btn-svg { background-color: #20c997; } 
         
-        .btn-hint { font-size: 12px; color: #666; text-align: center; margin-top: -5px; }
-
         .preview-container { 
             position: relative; width: 550px; padding: 20px; max-width: 95%; 
             border: 1px solid #eee; background-color: #fff; box-sizing: border-box; 
@@ -75,15 +72,11 @@
         }
         
         #svg-preview-box svg { width: 100%; height: auto; display: block; }
-
-        #error-box {
-            display: none; background: #ffe6e6; color: #c00; 
-            padding: 10px; margin-bottom: 10px; border: 1px solid #c00; text-align: left;
-        }
-
+        #error-box { display: none; background: #ffe6e6; color: #c00; padding: 10px; margin-bottom: 10px; border: 1px solid #c00; text-align: left; }
+        
         .footer { 
             margin-top: auto; padding: 40px 20px; width: 100%; text-align: center; 
-            color: #666; font-size: 14px; line-height: 1.8; 
+            color: #666; font-size: 14px; line-height: 1.8;
             background-color: #fff; border-top: 1px solid #eee;
         }
         .footer-link-blue { color: #0097D7; text-decoration: none; font-weight: bold; }
@@ -97,7 +90,7 @@
         <div class="input-group">
             <label>分會名稱 (Line 1)</label>
             <input type="text" id="chapterInput1" value="República" oninput="updatePreview()">
-            <div id="lengthWarning" class="warning-msg">⚠️ 文字過長 (超出盾牌右緣)</div>
+            <div id="lengthWarning" class="warning-msg">⚠️ 文字過長</div>
         </div>
         <div class="input-group">
             <label>分會名稱 (Line 2, 選填)</label>
@@ -124,9 +117,7 @@
         
         <div class="btn-group-vertical">
             <button class="btn-base btn-png" onclick="downloadFile('png')">下載 PNG 圖片</button>
-            <div class="btn-hint">(輸出為透明背景)</div>
             <button class="btn-base btn-svg" onclick="downloadFile('svg')">下載 SVG (純向量)</button>
-            <div class="btn-hint">(輸出為透明背景)</div>
         </div>
     </div>
 
@@ -147,37 +138,33 @@
 
     <script>
         // ==========================================
-        // ★★★ 設定區域：請將校正工具的數字填入這裡 ★★★
+        // ★★★ CONFIG 設定區域 (Version 2.0) ★★★
         // ==========================================
         const CONFIG = {
-            // 下面的數字是基於 1000px 寬度的 SVG
-            // x, y 單位是 % (百分比)
-            // size 單位是 px (相對值，例如 70 代表在寬1000px的畫布上是70px)
-            
+            // 單位說明:
+            // x, y: 百分比 (%)
+            // size: px (相對於 1000px 寬度)
             line1: { 
-                x: 11.9,    // X 軸百分比
-                y: 66.0,    // Y 軸百分比 (頂部)
-                size: 70    // 字體大小 (px)
+                x: 11.9,    
+                y: 66.0,    
+                size: 70
             },
-            
             line2: { 
-                x: 11.9,    // X 軸百分比 (完全獨立)
-                y: 74.9,    // Y 軸百分比 (完全獨立)
-                size: 70    // 字體大小 (px)
+                x: 11.9,    
+                y: 74.9,    
+                size: 70    
             }
         };
         // ==========================================
-
 
         let currentFont = null;
         let svgForPreview = ""; 
         let svgForDownload = "";
 
-        // 1. 載入字體
         window.onload = function() {
             opentype.load('PlusJakartaSans-Bold.ttf', function(err, font) {
                 if (err) {
-                    showError("字型載入失敗！請確認 PlusJakartaSans-Bold.ttf 是否在同目錄下。");
+                    showError("字型載入失敗！請確認 PlusJakartaSans-Bold.ttf 是否存在。");
                 } else {
                     currentFont = font;
                     updatePreview();
@@ -191,7 +178,6 @@
             box.innerHTML = msg;
         }
 
-        // 2. 核心：更新預覽與準備去背版 SVG
         async function updatePreview() {
             if (!currentFont) return;
             document.getElementById('error-box').style.display = 'none';
@@ -202,7 +188,6 @@
             const colorType = parts[2];
 
             document.getElementById('previewContainer').style.backgroundColor = bgColorToRemove;
-
             const colors = { 'jci-blue': '#0097D7', 'white': '#FFFFFF', 'black': '#1C1F2A' };
             const textColor = colors[colorType] || '#0097D7';
 
@@ -212,91 +197,98 @@
                 let rawSvg = await resp.text();
 
                 const parser = new DOMParser();
+                // 產生兩個獨立的 DOM，避免相互干擾
                 const docPreview = parser.parseFromString(rawSvg, "image/svg+xml");
                 const docDownload = parser.parseFromString(rawSvg, "image/svg+xml");
                 
-                const svgElPreview = docPreview.documentElement;
-                const svgElDownload = docDownload.documentElement;
-
-                // --- 處理下載版 (智慧去背) ---
-                const elements = svgElDownload.querySelectorAll('path, rect, polygon, circle');
+                // --- 下載版去背處理 ---
+                const elements = docDownload.documentElement.querySelectorAll('path, rect, polygon, circle');
                 elements.forEach(el => {
                     const fill = el.getAttribute('fill');
-                    if (fill && fill.toLowerCase() === bgColorToRemove.toLowerCase()) {
-                        el.remove();
-                    }
-                    if (bgColorToRemove.toLowerCase() === '#1c1f2a' && fill && fill.toLowerCase() === '#1c1f2a') {
-                        el.remove();
-                    }
+                    if (fill && fill.toLowerCase() === bgColorToRemove.toLowerCase()) el.remove();
+                    if (bgColorToRemove.toLowerCase() === '#1c1f2a' && fill && fill.toLowerCase() === '#1c1f2a') el.remove();
                 });
 
-                // --- 尺寸標準化 (固定為 1000x665 運算邏輯) ---
+                // --- 尺寸標準化 ---
+                // 不強制鎖死 width=1000，而是讀取原始 SVG 的比例，計算縮放係數
+                // 這樣可以兼容不同尺寸的 SVG 模板
                 let width = 1000, height = 665;
-                const viewBox = svgElPreview.getAttribute('viewBox');
-                if (viewBox) {
-                    const vb = viewBox.split(/[\s,]+/);
-                    width = parseFloat(vb[2]); height = parseFloat(vb[3]);
-                } else {
-                    width = parseFloat(svgElPreview.getAttribute('width')) || 1000;
-                    height = parseFloat(svgElPreview.getAttribute('height')) || 665;
-                    svgElPreview.setAttribute('viewBox', `0 0 ${width} ${height}`);
-                    svgElDownload.setAttribute('viewBox', `0 0 ${width} ${height}`);
-                }
-                svgElPreview.setAttribute('xmlns', "http://www.w3.org/2000/svg");
-                svgElDownload.setAttribute('xmlns', "http://www.w3.org/2000/svg");
-
-                // ==========================================
-                // ★★★ 核心修改：套用 CONFIG 參數 ★★★
-                // ==========================================
                 
-                // 1. 計算第一行 (Line 1)
-                // 將 config 的 size (假設是針對 1000px 的值) 依比例轉換
-                const size1 = width * (CONFIG.line1.size / 1000); 
+                const getDimensions = (el) => {
+                    const vb = el.getAttribute('viewBox');
+                    if (vb) {
+                        const s = vb.split(/[\s,]+/);
+                        return { w: parseFloat(s[2]), h: parseFloat(s[3]) };
+                    } 
+                    const w = parseFloat(el.getAttribute('width'));
+                    const h = parseFloat(el.getAttribute('height'));
+                    if (!isNaN(w) && !isNaN(h)) return { w, h };
+                    return { w: 1000, h: 665 }; // Fallback
+                };
+
+                const dim = getDimensions(docPreview.documentElement);
+                width = dim.w; 
+                height = dim.h;
+
+                // 確保 viewBox 存在
+                const setVB = (el) => {
+                    if (!el.getAttribute('viewBox')) el.setAttribute('viewBox', `0 0 ${width} ${height}`);
+                    el.setAttribute('xmlns', "http://www.w3.org/2000/svg");
+                }
+                setVB(docPreview.documentElement);
+                setVB(docDownload.documentElement);
+
+                // --- 核心運算 (加入縮放係數 scaleFactor) ---
+                // CONFIG 是基於 1000px 寬度設定的，所以如果 SVG 是 5000px，數值要放大 5 倍
+                const scaleFactor = width / 1000; 
+
+                const size1 = CONFIG.line1.size * scaleFactor;
+                const size2 = CONFIG.line2.size * scaleFactor;
+
                 const x1 = width * (CONFIG.line1.x / 100);
-                // 修正：Opentype 從基線(Baseline)畫，所以要把 Top 座標加上字體大小往下推
-                const y1 = (height * (CONFIG.line1.y / 100)) + size1;
-
-                // 2. 計算第二行 (Line 2) - 完全獨立
-                const size2 = width * (CONFIG.line2.size / 1000);
                 const x2 = width * (CONFIG.line2.x / 100);
-                const y2 = (height * (CONFIG.line2.y / 100)) + size2;
-                // ==========================================
 
+                // Y 軸 Baseline 修正 (頂部對齊轉基線對齊)
+                const y1 = (height * (CONFIG.line1.y / 100)) + size1;
+                const y2 = (height * (CONFIG.line2.y / 100)) + size2;
 
                 const t1 = document.getElementById('chapterInput1').value;
                 const t2 = document.getElementById('chapterInput2').value;
 
-                // 檢查長度警示
-                const w1 = currentFont.getAdvanceWidth(t1, size1);
-                document.getElementById('lengthWarning').style.display = (w1 > width * 0.55) ? 'block' : 'none';
-
-                // 生成 Path (opentype.js)
+                // --- 生成 Path ---
                 const p1 = currentFont.getPath(t1, x1, y1, size1);
                 p1.fill = textColor;
                 const p1Svg = p1.toSVG(2);
 
                 let p2Svg = "";
-                if (t2.trim()) {
+                // 修正第二行顯示邏輯：只要不為 undefined 就生成 (允許空字串占位)
+                if (t2) {
                     const p2 = currentFont.getPath(t2, x2, y2, size2);
                     p2.fill = textColor;
                     p2Svg = p2.toSVG(2);
                 }
 
-                // 插入 DOM
+                // --- 注入 SVG (修正重點) ---
+                // 創建一個容器來放生成的 Path
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = p1Svg + p2Svg;
                 
-                const textNodesForPreview = tempDiv.cloneNode(true);
-                while (textNodesForPreview.firstChild) {
-                    svgElPreview.appendChild(textNodesForPreview.firstChild);
-                }
-                
-                const textNodesForDownload = tempDiv.cloneNode(true);
-                while (textNodesForDownload.firstChild) {
-                    svgElDownload.appendChild(textNodesForDownload.firstChild);
-                }
+                // [修復問題1 & 2]：使用 importNode 確保跨文件操作安全
+                const injectSafe = (targetDoc) => {
+                    const targetRoot = targetDoc.documentElement;
+                    // 遍歷 tempDiv 的子節點 (path)
+                    Array.from(tempDiv.childNodes).forEach(node => {
+                        if (node.nodeType === 1) { // 確保是 Element
+                            // 關鍵：使用 importNode 複製節點到目標文檔
+                            const importedNode = targetDoc.importNode(node, true);
+                            targetRoot.appendChild(importedNode);
+                        }
+                    });
+                };
 
-                // 序列化
+                injectSafe(docPreview);
+                injectSafe(docDownload); // 這裡確保下載版也有文字
+
                 const serializer = new XMLSerializer();
                 svgForPreview = serializer.serializeToString(docPreview);
                 svgForDownload = serializer.serializeToString(docDownload);
@@ -309,59 +301,37 @@
             }
         }
 
-        // 3. 下載功能
         async function downloadFile(type) {
             if (!svgForDownload) return;
-
             const btn = document.querySelector(`.btn-${type}`);
             const originalText = btn.innerText;
             btn.innerText = "生成中..."; btn.disabled = true;
-
             const name = "JCI_" + document.getElementById('chapterInput1').value;
 
             try {
                 if (type === 'svg') {
                     const blob = new Blob([svgForDownload], {type: "image/svg+xml;charset=utf-8"});
                     triggerDownload(URL.createObjectURL(blob), name + ".svg");
-                    alert("✅ SVG 下載成功！\n(已自動去除背景色塊)");
-                } 
-                else {
+                } else {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     const img = new Image();
                     const scale = parseFloat(document.getElementById('sizeSelect').value);
-                    
                     const svgBlob = new Blob([svgForDownload], {type: "image/svg+xml;charset=utf-8"});
                     const url = URL.createObjectURL(svgBlob);
-
-                    await new Promise((resolve, reject) => {
-                        img.onload = resolve;
-                        img.onerror = reject;
-                        img.src = url;
-                    });
-
+                    
+                    await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url; });
+                    
                     canvas.width = img.width * scale;
                     canvas.height = img.height * scale;
-                    
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     URL.revokeObjectURL(url);
-
-                    const pngData = canvas.toDataURL("image/png");
                     
-                    if (/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                        const win = window.open();
-                        win.document.write('<style>body{background:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgxMHYxMEgwem0xMCAxMGgxMHYxMEgxMHoiIGZpbGw9IiNlZWUiLz48L3N2Zz4=") repeat; display:flex; justify-content:center; align-items:center; min-height:100vh; margin:0;}</style>');
-                        win.document.write('<img src="' + pngData + '" style="max-width:100%; height:auto;"/>');
-                        alert("✅ 圖片已生成！\n請在新視窗長按圖片儲存。");
-                    } else {
-                        triggerDownload(pngData, name + ".png");
-                        alert("✅ PNG 下載成功 (" + canvas.width + "px)");
-                    }
+                    triggerDownload(canvas.toDataURL("image/png"), name + ".png");
                 }
             } catch (e) {
-                console.error(e);
-                alert("❌ 錯誤：" + e.message);
+                alert("錯誤：" + e.message);
             } finally {
                 btn.innerText = originalText; btn.disabled = false;
             }
@@ -369,11 +339,8 @@
 
         function triggerDownload(url, name) {
             const a = document.createElement('a');
-            a.href = url;
-            a.download = name;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            a.href = url; a.download = name;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
             if (url.startsWith('blob:')) URL.revokeObjectURL(url);
         }
     </script>
