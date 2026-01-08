@@ -3,66 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (V10.0 Nuclear Fix)</title>
+    <title>JCI Logo Generator (V12.0 Auto-Transparent)</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
 
     <style>
-        /* 1. 字型設定 */
         @font-face { 
             font-family: 'Plus Jakarta Sans'; 
             src: url('PlusJakartaSans-Bold.ttf') format('truetype'); 
             font-weight: bold; 
         }
 
-        /* 2. 全局重置 */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: #f8f9fa; 
-            margin: 0; 
-            padding: 0;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            min-height: 100vh; 
-            color: #333;
+            background-color: #f8f9fa; margin: 0; padding: 0;
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh; color: #333;
         }
 
         .navbar {
-            width: 100%; 
-            background-color: #0097D7; 
-            color: white;
-            padding: 16px 0; 
-            text-align: center; 
-            font-size: 20px; 
-            font-weight: bold;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15); 
-            margin-bottom: 24px;
-            position: sticky; top: 0; z-index: 100;
+            width: 100%; background-color: #0097D7; color: white;
+            padding: 16px 0; text-align: center; font-size: 20px; font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-bottom: 24px; position: sticky; top: 0; z-index: 100;
         }
 
         .controls { 
-            background: white; 
-            padding: 24px; 
-            border-radius: 16px; 
+            background: white; padding: 24px; border-radius: 16px; 
             box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
-            display: flex; 
-            gap: 16px; 
-            align-items: flex-end; 
-            margin-bottom: 24px; 
-            flex-wrap: wrap; 
-            justify-content: center; 
-            max-width: 800px; 
-            width: 90%;
+            display: flex; gap: 16px; align-items: flex-end; 
+            margin-bottom: 24px; flex-wrap: wrap; justify-content: center; 
+            max-width: 800px; width: 90%;
         }
         
-        .input-group { 
-            display: flex; flex-direction: column; gap: 6px; 
-            width: 100%; max-width: 250px; 
-        }
-        
+        .input-group { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 250px; }
         label { font-size: 13px; font-weight: 700; color: #555; margin-left: 2px; }
         
         input, select { 
@@ -73,16 +48,12 @@
         }
         
         .warning-msg {
-            display: none; color: #dc3545; font-size: 13px; 
-            margin-top: 6px; background-color: #ffe6e6; 
-            padding: 10px; border-radius: 6px; border: 1px solid #ffcccc;
+            display: none; color: #dc3545; font-size: 13px; margin-top: 6px; 
+            background-color: #ffe6e6; padding: 10px; border-radius: 6px; border: 1px solid #ffcccc;
         }
 
-        .btn-group-vertical { 
-            display: flex; flex-direction: column; gap: 10px; 
-            width: 100%; max-width: 250px; 
-        }
-
+        .btn-group-vertical { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 250px; }
+        
         .btn-base {
             padding: 0 20px; font-size: 15px; font-weight: bold; color: white;
             border: none; border-radius: 8px; cursor: pointer; height: 44px; width: 100%;
@@ -92,17 +63,19 @@
         .btn-base:disabled { background-color: #ccc !important; cursor: not-allowed; }
 
         .btn-png { background-color: #0097D7; }
-        .btn-svg { background-color: #20c997; }
-        .btn-eps { background-color: #6610f2; }
+        .btn-svg { background-color: #20c997; } 
 
         .preview-container { 
             position: relative; width: 550px; padding: 20px; max-width: 95%; 
             border: 1px solid #eee; background-color: #fff; box-sizing: border-box; 
             margin: 0 auto; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
             text-align: center;
+            /* 這裡設定背景圖案 (方格) 代表透明，讓使用者知道這裡是透明的 */
+            background-image: linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee), linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
         }
         
-        /* 強制預覽圖寬度，但不影響下載解析度 */
         #svg-preview-box svg { width: 100%; height: auto; display: block; }
 
         #error-box {
@@ -143,7 +116,7 @@
             </select>
         </div>
         <div class="input-group">
-            <label>解析度 (PNG/EPS)</label>
+            <label>PNG 解析度</label>
             <select id="sizeSelect">
                 <option value="1">1x (1000px)</option>
                 <option value="3" selected>3x (3000px)</option>
@@ -152,13 +125,12 @@
         </div>
         
         <div class="btn-group-vertical">
-            <button class="btn-base btn-png" onclick="downloadFile('png')">下載 PNG 圖片</button>
-            <button class="btn-base btn-svg" onclick="downloadFile('svg')">下載 SVG (向量)</button>
-            <button class="btn-base btn-eps" onclick="downloadFile('eps')">下載 EPS (印刷)</button>
+            <button class="btn-base btn-png" onclick="downloadFile('png')">下載 PNG 圖片 (透明背景)</button>
+            <button class="btn-base btn-svg" onclick="downloadFile('svg')">下載 SVG (純向量)</button>
         </div>
     </div>
 
-    <div class="preview-container">
+    <div class="preview-container" id="previewContainer">
         <div id="error-box"></div>
         <div id="svg-preview-box">正在載入...</div>
     </div>
@@ -175,7 +147,7 @@
 
     <script>
         let currentFont = null;
-        let finalSvgString = ""; // 這是最重要的變數，儲存包含文字的完整 SVG 原始碼
+        let finalSvgString = "";
 
         // 1. 載入字體
         window.onload = function() {
@@ -195,59 +167,65 @@
             box.innerHTML = msg;
         }
 
-        // 2. 核心：更新畫面 (字串替換法，保證文字存在)
+        // 2. 核心：更新預覽與去背
         async function updatePreview() {
             if (!currentFont) return;
             document.getElementById('error-box').style.display = 'none';
 
-            // 取得設定
             const parts = document.getElementById('logoSelect').value.split('|');
-            // 編碼檔名處理
             const fileName = encodeURIComponent(parts[0]).replace(/%2F/g, "/"); 
-            const bgColor = parts[1];
+            const bgColor = parts[1]; // 這是我們要「移除」的顏色
             const colorType = parts[2];
 
-            // 背景色
-            document.querySelector('.preview-container').style.backgroundColor = bgColor;
-            // 文字色
+            // 設定預覽區的背景色 (僅視覺，不影響下載)
+            // 如果是深色模式，我們還是顯示深色背景讓使用者看得到白字
+            // 下載時這層 CSS 背景不會被帶走
+            document.getElementById('previewContainer').style.backgroundColor = bgColor;
+
             const colors = { 'jci-blue': '#0097D7', 'white': '#FFFFFF', 'black': '#1C1F2A' };
             const textColor = colors[colorType] || '#0097D7';
 
             try {
-                // 讀取 SVG 文字檔
                 const resp = await fetch(fileName);
                 if (!resp.ok) throw new Error("讀取失敗: " + fileName);
                 let rawSvg = await resp.text();
 
-                // 移除可能的 XML 宣告，避免重複
-                rawSvg = rawSvg.replace(/<\?xml.*?\?>/, '');
-
-                // 解析尺寸 (為了計算文字位置)
+                // 解析 SVG
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(rawSvg, "image/svg+xml");
                 const svgEl = doc.documentElement;
-                
-                // 強制設定基礎寬度 1000px，確保比例一致
-                let width = 1000;
-                let height = 665;
-                
-                // 嘗試讀取 viewBox
+
+                // ★★★ 智慧去背：移除與背景色相同的圖層 ★★★
+                // 遍歷所有 path, rect, polygon
+                const elements = svgEl.querySelectorAll('path, rect, polygon, circle');
+                elements.forEach(el => {
+                    const fill = el.getAttribute('fill');
+                    // 簡單的比對：如果 SVG 裡的 fill 等於我們設定的背景色，就刪掉它
+                    // 注意：這裡要做大小寫不敏感比對
+                    if (fill && fill.toLowerCase() === bgColor.toLowerCase()) {
+                        el.remove();
+                    }
+                    // 針對 JCI Black 這種特殊色 (#1c1f2a) 也要檢查
+                    if (bgColor.toLowerCase() === '#1c1f2a' && fill && fill.toLowerCase() === '#1c1f2a') {
+                        el.remove();
+                    }
+                });
+
+                // 尺寸處理
+                let width = 1000, height = 665;
                 const viewBox = svgEl.getAttribute('viewBox');
                 if (viewBox) {
                     const vb = viewBox.split(/[\s,]+/);
                     width = parseFloat(vb[2]);
                     height = parseFloat(vb[3]);
                 } else {
-                    // 若無 viewBox，讀取 width/height 或使用預設值
                     width = parseFloat(svgEl.getAttribute('width')) || 1000;
                     height = parseFloat(svgEl.getAttribute('height')) || 665;
+                    svgEl.setAttribute('viewBox', `0 0 ${width} ${height}`);
                 }
+                svgEl.setAttribute('xmlns', "http://www.w3.org/2000/svg");
 
-                // 確保 SVG 標籤上有正確的 viewBox，方便後續縮放
-                // 我們不修改原始 rawSvg 的 header，而是在最後合成時處理，或者依賴瀏覽器解析
-                // 簡單起見，我們繼續使用 rawSvg，但在生成 Path 時使用基於 width/height 的比例
-
-                // 計算座標
+                // 文字座標
                 const fontSize = width * 0.08;
                 const textX = width * 0.118;
                 const textYStart = (height * 0.662) + fontSize; 
@@ -256,12 +234,11 @@
                 const t1 = document.getElementById('chapterInput1').value;
                 const t2 = document.getElementById('chapterInput2').value;
 
-                // 檢查 Point 4
+                // 警告偵測
                 const w1 = currentFont.getAdvanceWidth(t1, fontSize);
                 document.getElementById('lengthWarning').style.display = (w1 > width * 0.55) ? 'block' : 'none';
 
-                // 生成 Path String
-                // opentype.js 的 toSVG 會回傳 `<path d="..." />`
+                // 生成文字路徑
                 const p1 = currentFont.getPath(t1, textX, textYStart, fontSize);
                 p1.fill = textColor;
                 const p1Svg = p1.toSVG(2);
@@ -273,22 +250,15 @@
                     p2Svg = p2.toSVG(2);
                 }
 
-                // ★★★ 暴力寫入法 (Nuclear Option) ★★★
-                // 直接找到 </svg> 標籤，把文字路徑塞在它前面
-                // 這樣可以確保文字一定在檔案裡，而且一定在最上層
-                if (rawSvg.includes('</svg>')) {
-                    finalSvgString = rawSvg.replace('</svg>', p1Svg + p2Svg + '</svg>');
-                } else {
-                    // 萬一 SVG 格式怪異，直接追加
-                    finalSvgString = rawSvg + p1Svg + p2Svg;
-                }
-                
-                // 如果原始 SVG 沒有 viewBox，我們可以在這裡強制補上 (字串替換)
-                if (!finalSvgString.includes('viewBox')) {
-                     finalSvgString = finalSvgString.replace('<svg', `<svg viewBox="0 0 ${width} ${height}"`);
+                // 插入 DOM
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = p1Svg + p2Svg;
+                while (tempDiv.firstChild) {
+                    svgEl.appendChild(tempDiv.firstChild);
                 }
 
-                // 更新預覽
+                // 輸出
+                finalSvgString = new XMLSerializer().serializeToString(doc);
                 document.getElementById('svg-preview-box').innerHTML = finalSvgString;
 
             } catch (err) {
@@ -297,7 +267,6 @@
             }
         }
 
-        // 3. 下載功能 (強制高解析)
         async function downloadFile(type) {
             if (!finalSvgString) return;
 
@@ -309,23 +278,15 @@
 
             try {
                 if (type === 'svg') {
-                    // SVG: 直接下載字串，這一定是對的，因為就是預覽看到的那個
-                    triggerDownload(finalSvgString, name + ".svg", "image/svg+xml;charset=utf-8");
-                    alert("✅ SVG 下載成功！\n此檔案已包含文字路徑。");
+                    const blob = new Blob([finalSvgString], {type: "image/svg+xml;charset=utf-8"});
+                    triggerDownload(URL.createObjectURL(blob), name + ".svg");
+                    alert("✅ SVG 下載成功！\n背景色塊已自動移除 (透明背景)。");
                 } 
                 else {
-                    // PNG / EPS: 需要轉 Canvas
-                    // 這裡我們不依賴預覽圖的大小，而是建立一個全新的超大 Canvas
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     const img = new Image();
-
-                    // 設定解析度：基礎 1000px * 倍率
-                    // 這樣 5x 就是 5000px，保證清晰
-                    const scale = (type === 'png') ? parseFloat(document.getElementById('sizeSelect').value) : 5; 
-                    const baseWidth = 1000; // 假設基礎寬度
-                    // 注意：這裡我們需要取得 SVG 的真實寬高比
-                    // 我們可以利用 img.onload 後取得的 width 來計算
+                    const scale = parseFloat(document.getElementById('sizeSelect').value);
                     
                     const svgBlob = new Blob([finalSvgString], {type: "image/svg+xml;charset=utf-8"});
                     const url = URL.createObjectURL(svgBlob);
@@ -336,36 +297,24 @@
                         img.src = url;
                     });
 
-                    // 強制設定 Canvas 尺寸
-                    // 如果 img.width 讀取出來很小 (瀏覽器預設)，我們就強制放大
-                    // 我們假設 logo 寬度至少要 baseWidth * scale
-                    const aspect = img.height / img.width;
-                    const targetWidth = baseWidth * scale;
-                    const targetHeight = targetWidth * aspect;
-
-                    canvas.width = targetWidth;
-                    canvas.height = targetHeight;
-
-                    // 繪製
-                    ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    
+                    // 清空 Canvas 確保透明
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     URL.revokeObjectURL(url);
 
-                    if (type === 'png') {
-                        const pngData = canvas.toDataURL("image/png");
-                        // 判斷裝置
-                        if (/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                            const win = window.open();
-                            win.document.write('<img src="' + pngData + '" style="width:100%"/>');
-                            alert("✅ 圖片已生成！請長按儲存。");
-                        } else {
-                            triggerDownload(pngData, name + ".png", "image/png");
-                            alert("✅ PNG 下載成功 (" + targetWidth + "px)");
-                        }
-                    } 
-                    else if (type === 'eps') {
-                        const epsData = generateRobustEPS(ctx, canvas.width, canvas.height);
-                        triggerDownload(epsData, name + ".eps", "application/postscript");
-                        alert("✅ EPS 下載成功！");
+                    const pngData = canvas.toDataURL("image/png");
+                    
+                    if (/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                        const win = window.open();
+                        win.document.write('<style>body{background:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgxMHYxMEgwem0xMCAxMGgxMHYxMEgxMHoiIGZpbGw9IiNlZWUiLz48L3N2Zz4=") repeat;}</style>');
+                        win.document.write('<img src="' + pngData + '" style="width:100%"/>');
+                        alert("✅ 圖片已生成！\n請在新視窗長按圖片儲存。\n(背景顯示為方格代表透明)");
+                    } else {
+                        triggerDownload(pngData, name + ".png");
+                        alert("✅ PNG 下載成功 (" + canvas.width + "px)\n背景為透明。");
                     }
                 }
             } catch (e) {
@@ -376,51 +325,14 @@
             }
         }
 
-        // 4. EPS 產生器 (Hex 封裝)
-        function generateRobustEPS(ctx, width, height) {
-            const imgData = ctx.getImageData(0, 0, width, height);
-            let hex = "";
-            const d = imgData.data;
-            for(let i=0; i<d.length; i+=4) {
-                const r = d[i]; const g = d[i+1]; const b = d[i+2];
-                if (r<16) hex+="0"; hex += r.toString(16);
-                if (g<16) hex+="0"; hex += g.toString(16);
-                if (b<16) hex+="0"; hex += b.toString(16);
-            }
-            return `%!PS-Adobe-3.0 EPSF-3.0
-%%BoundingBox: 0 0 ${width} ${height}
-%%Title: JCI Logo
-%%Creator: JCI Generator
-%%Pages: 1
-%%EndComments
-/readstring { currentfile exch readhexstring pop } bind def
-/picstr ${width} 3 mul string def
-gsave
-${width} ${height} scale
-${width} ${height} 8 [${width} 0 0 -${height} 0 ${height}]
-{ picstr readstring } false 3
-colorimage
-${hex}
-grestore
-%%EOF`;
-        }
-
-        // 5. 下載觸發
-        function triggerDownload(data, name, mime) {
-            let url;
-            if (data.startsWith('data:')) {
-                url = data;
-            } else {
-                const blob = new Blob([data], {type: mime});
-                url = URL.createObjectURL(blob);
-            }
+        function triggerDownload(url, name) {
             const a = document.createElement('a');
             a.href = url;
             a.download = name;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            if (!data.startsWith('data:')) URL.revokeObjectURL(url);
+            if (url.startsWith('blob:')) URL.revokeObjectURL(url);
         }
     </script>
 </body>
