@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator (V7.1 Matched Filenames)</title>
+    <title>JCI Logo Generator (V7.2 Fix Path)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
     <style>
@@ -155,11 +155,11 @@
         <div class="input-group">
             <label>Logo 樣式</label>
             <select id="logoSelect" onchange="changeLogoStyle()">
-                <option value="New JCI Logo (SVG)_Primary.svg|#ffffff|jci-blue">Primary (白底藍字)</option>
-                <option value="New JCI Logo (SVG)_Secondary - White on JCI Blue.svg|#0097D7|white">Blue Background (藍底白字)</option>
-                <option value="New JCI Logo (SVG).svg|#1c1f2a|white">Dark Background (深底白字)</option>
-                <option value="New JCI Logo (SVG)_Secondary - Inverted Color on JCI Black.svg|#000000|white">Inverted (黑底白字)</option>
-                <option value="New JCI Logo (SVG)_Secondary - JCI Black.svg|#ffffff|black">Black Text (白底黑字)</option>
+                <option value="New%20JCI%20Logo%20(SVG)_Primary.svg|#ffffff|jci-blue">Primary (白底藍字)</option>
+                <option value="New%20JCI%20Logo%20(SVG)_Secondary%20-%20White%20on%20JCI%20Blue.svg|#0097D7|white">Blue Background (藍底白字)</option>
+                <option value="New%20JCI%20Logo%20(SVG).svg|#1c1f2a|white">Dark Background (深底白字)</option>
+                <option value="New%20JCI%20Logo%20(SVG)_Secondary%20-%20Inverted%20Color%20on%20JCI%20Black.svg|#000000|white">Inverted (黑底白字)</option>
+                <option value="New%20JCI%20Logo%20(SVG)_Secondary%20-%20JCI%20Black.svg|#ffffff|black">Black Text (白底黑字)</option>
             </select>
         </div>
         <div class="input-group">
@@ -188,7 +188,7 @@
 
     <div class="preview-container" id="previewBox">
         <div class="logo-wrapper" id="captureTarget">
-            <img id="logoImg" src="New JCI Logo (SVG)_Primary.svg">
+            <img id="logoImg" src="New%20JCI%20Logo%20(SVG)_Primary.svg">
             <div id="chapterTextWrapper" class="chapter-name-wrapper">
                 <div id="chapterTextLine1" class="text-line text-jci-blue">Dayuan</div>
                 <div id="chapterTextLine2" class="text-line text-jci-blue hidden"></div>
@@ -222,6 +222,8 @@
 
         function changeLogoStyle() {
             var parts = document.getElementById('logoSelect').value.split('|');
+            // 解碼後再給 src，或者直接給編碼過的也可以，瀏覽器通常看得懂
+            // 為了保險，我們使用 decodeURIComponent 後再 encodeURIComponent 確保一致性
             document.getElementById('logoImg').src = parts[0];
             document.getElementById('previewBox').style.backgroundColor = parts[1];
             var defaultColor = parts[2];
@@ -278,7 +280,6 @@
             await new Promise(resolve => setTimeout(resolve, 50));
 
             try {
-                // html2canvas 支援 SVG 截圖
                 const canvas = await html2canvas(element, { backgroundColor: null, scale: finalScale, useCORS: true });
                 const imgData = canvas.toDataURL("image/png");
                 document.getElementById('captureTarget').style.display = 'none';
@@ -296,7 +297,7 @@
             }
         }
 
-        // --- 向量引擎 (讀取外部 SVG) ---
+        // --- 向量引擎 ---
         async function downloadVector(format) {
             var btn = document.querySelector(format === 'svg' ? '.btn-svg' : '.btn-eps');
             var originalText = btn.innerText;
@@ -308,10 +309,10 @@
             var colors = { 'text-jci-blue': '#0097D7', 'text-white': '#FFFFFF', 'text-black': '#1C1F2A' };
             var textColorHex = colors[colorSelectVal] || '#0097D7';
             
-            // 取得目前 SVG 檔名
+            // 取得 SVG 檔名 (這裡會是 encode 過的，例如 New%20JCI...)
             var svgFileName = document.getElementById('logoSelect').value.split('|')[0];
 
-            // 參數設定 (與 CSS 相同)
+            // 參數
             const width = 1000; const height = 665;
             const fontSize = width * 0.08; 
             const textYStart = height * 0.662; 
@@ -321,12 +322,11 @@
             const line2Y = textYStart + lineHeight + marginTop;
 
             try {
-                // 讀取外部 SVG
+                // fetch 會自動處理 %20 這種編碼，所以直接傳入即可
                 const response = await fetch(svgFileName);
                 if (!response.ok) throw new Error("無法讀取 SVG 檔案");
                 const svgText = await response.text();
                 
-                // 載入字體並運算
                 opentype.load('PlusJakartaSans-Bold.ttf', function(err, font) {
                     if (err) {
                         alert('字型載入失敗，請確認 PlusJakartaSans-Bold.ttf');
@@ -342,21 +342,19 @@
                     }
 
                     if (format === 'svg') {
-                        // 移除結尾的 </svg>，插入路徑，再封閉
                         let finalSvgContent = svgText.replace('</svg>', '');
                         finalSvgContent += `<path d="${path1Data}" fill="${textColorHex}" />`;
                         finalSvgContent += `<path d="${path2Data}" fill="${textColorHex}" />`;
                         finalSvgContent += '</svg>';
-                        
                         triggerDownload(finalSvgContent, `JCI_Logo_${text1}.svg`, 'image/svg+xml');
                     } 
                     else if (format === 'eps') {
-                        // EPS 邏輯 (嵌入高解析度 SVG 點陣圖)
                         var canvas = document.createElement('canvas');
                         canvas.width = width; canvas.height = height;
                         var ctx = canvas.getContext('2d');
                         
                         var img = new Image();
+                        img.crossOrigin = "Anonymous"; // 加入這行確保跨域安全
                         img.onload = function() {
                             ctx.drawImage(img, 0, 0, width, height);
                             var fontPath1 = font.getPath(text1, textX, textYStart + fontSize, fontSize);
@@ -390,7 +388,7 @@ grestore
                             triggerDownload(epsContent, `JCI_Logo_${text1}.eps`, 'application/postscript');
                             btn.innerText = originalText; btn.disabled = false;
                         };
-                        // 將 SVG 轉為 Base64 供 Canvas 繪製
+                        // 使用 encodeURIComponent 確保 SVG 內容轉 Base64 時不會因為特殊字元報錯
                         img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgText)));
                         return;
                     }
@@ -400,7 +398,7 @@ grestore
 
             } catch (err) {
                 console.error(err);
-                alert("讀取 SVG 檔案失敗。請確認檔案名稱是否正確，且未使用直接雙擊 HTML 的方式開啟 (需使用 Local Server)。");
+                alert("讀取 SVG 檔案失敗，請確保 SVG 檔案已上傳至 GitHub。");
                 btn.innerText = originalText; btn.disabled = false;
             }
         }
