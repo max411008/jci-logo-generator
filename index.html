@@ -17,17 +17,19 @@
 
     <style>
         /* ==========================================================================
-           1. 字體定義 (Fonts) - 全面採用開源字體，確保商用合法性
+           1. 字體定義 (Fonts)
+           使用開源字體 Plus Jakarta Sans 與 Noto Sans TC，確保版權合法
            ========================================================================== */
-        
-        /* Plus Jakarta Sans (取代 Helvetica/Arial，作為主要英文字體) */
         @font-face { 
             font-family: 'Plus Jakarta Sans'; 
             src: url('PlusJakartaSans-Bold.ttf') format('truetype'); 
             font-weight: bold; 
         }
-        
-        /* Noto Sans TC (思源黑體，作為主要中文字體) */
+        @font-face { 
+            font-family: 'Arial Bold'; 
+            src: url('arialbd.ttf') format('truetype'); 
+            font-weight: bold; 
+        }
         @font-face { 
             font-family: 'Noto Sans TC'; 
             src: url('NotoSansTC-Bold.ttf') format('truetype'); 
@@ -380,7 +382,7 @@
         }
         .log-desc li { margin-bottom: 3px; }
 
-        /* 圖片預覽下載提示 */
+        /* 圖片下載預覽提示樣式 */
         .save-hint { 
             text-align: center; 
             padding: 10px; 
@@ -389,6 +391,48 @@
             color: #0d47a1; 
             font-weight: bold; 
             margin-bottom: 15px; 
+        }
+        
+        /* 手機版 Overlay 樣式 (V2.0 邏輯) */
+        .mobile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+            text-align: center;
+        }
+        .mobile-overlay img {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        .mobile-overlay p {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        .mobile-overlay .close-overlay {
+            padding: 12px 30px;
+            background: #0097D7;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,151,215,0.3);
         }
     </style>
 </head>
@@ -490,7 +534,7 @@
                         <ul>
                             <li><strong>🇹🇼 台灣總會版：</strong>實作獨有的雙行排版，並針對中英文採用獨立座標系統，確保像素級對齊。</li>
                             <li><strong>📱 行動裝置支援：</strong>修復 LINE 與 Safari 內建瀏覽器的下載問題，新增圖片預覽彈窗。</li>
-                            <li><strong>⚖️ 合規性升級：</strong>全面採用 <strong>Plus Jakarta Sans</strong> 開源字體，確保 100% 版權安全。</li>
+                            <li><strong>⚖️ 合規性升級：</strong>全面採用 <strong>Plus Jakarta Sans</strong> (世界總會規定之字體) 與 <strong>Noto Sans TC</strong> (中文)，確保 100% 版權合法。</li>
                             <li><strong>Smart Layout 引擎：</strong>開發紅線演算法，文字過長自動縮小，確保不超出盾牌邊界；並具備分散對齊功能。</li>
                         </ul>
                     </div>
@@ -577,8 +621,8 @@
                     sizePx: 56 
                 },
                 
-                defaultText1: "Hsinchu,Taiwan",
-                defaultText2: "新竹市新竹國際青年商會"
+                defaultText1: "Dayuan, Taiwan",
+                defaultText2: "大園國際青年商會"
             }
         };
 
@@ -856,8 +900,16 @@
 
                     if (isMobile) {
                         // ★ LINE/Safari 修復：改為彈出 Modal 預覽，不開新視窗
-                        document.getElementById('generatedImage').src = pngData;
-                        openModal('imagePreview');
+                        // 使用 V2.0 風格的 Mobile Overlay
+                        const overlay = document.createElement('div');
+                        overlay.className = 'mobile-overlay';
+                        overlay.innerHTML = `
+                            <p style="font-weight:bold; color:#0097D7; font-size:18px;">圖片已生成！</p>
+                            <p>請「長按下方圖片」並選擇「儲存圖片」<br>(Long press image to save)</p>
+                            <img src="${pngData}">
+                            <button class="close-overlay" onclick="this.parentElement.remove()">完成並返回 (Close)</button>
+                        `;
+                        document.body.appendChild(overlay);
                     } else { 
                         // 電腦版直接下載
                         triggerDL(pngData, name + ".png"); 
