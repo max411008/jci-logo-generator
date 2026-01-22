@@ -3,428 +3,823 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator V2.0 SVG AVAILABLE EDITION</title>
+    <title>JCI Logo Generator v3.0</title>
     
     <script>
         window.onerror = function(msg, url, line) {
-            var box = document.getElementById('debug-console');
-            if(box) {
-                box.style.display = 'block';
-                box.innerHTML += '<div style="color:red; margin-bottom:5px;">❌ 系統錯誤: ' + msg + ' (Line: ' + line + ')</div>';
-            }
-            if(document.querySelector('.controls')) document.querySelector('.controls').style.display = 'flex';
+            if (msg.indexOf('ResizeObserver') !== -1) return;
+            console.log('系統訊息: ' + msg);
         };
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
 
     <style>
-        /* --- 1. 全局定義與重置 --- */
+        /* ==========================================================================
+           1. 字體定義 (Fonts)
+           ========================================================================== */
         @font-face { 
             font-family: 'Plus Jakarta Sans'; 
             src: url('PlusJakartaSans-Bold.ttf') format('truetype'); 
             font-weight: bold; 
         }
+        @font-face { 
+            font-family: 'Arial Bold'; 
+            src: url('arialbd.ttf') format('truetype'); 
+            font-weight: bold; 
+        }
+        @font-face { 
+            font-family: 'Noto Sans TC'; 
+            src: url('NotoSansTC-Bold.ttf') format('truetype'); 
+            font-weight: bold; 
+        }
         
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        /* ==========================================================================
+           2. 全域基礎樣式 (Global Styles)
+           ========================================================================== */
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+        }
         
         body { 
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            font-family: 'Plus Jakarta Sans', 'Arial', 'Noto Sans TC', sans-serif; 
             background-color: #f8f9fa; 
             margin: 0; 
             padding: 0;
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            min-height: 100vh;
+            min-height: 100vh; 
             color: #333;
         }
 
-        /* --- 2. App 頂部導航列 (Navbar) --- */
+        /* ==========================================================================
+           3. 導覽列 (Navbar)
+           ========================================================================== */
         .navbar {
-            width: 100%;
-            background-color: #0097D7;
+            width: 100%; 
+            background-color: #0097D7; 
             color: white;
-            padding: 12px 0;
-            text-align: center;
-            line-height: 1.3;
+            padding: 12px 0; 
+            text-align: center; 
             font-weight: bold;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            margin-bottom: 24px;
-            position: sticky;
-            top: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15); 
+            margin-bottom: 20px;
+            position: sticky; 
+            top: 0; 
             z-index: 100;
         }
-        .nav-main { font-size: 20px; display: block; }
-        .nav-sub { font-size: 14px; opacity: 0.9; letter-spacing: 1px; font-weight: normal; }
+        .nav-main { 
+            font-size: 20px; 
+            display: block; 
+        }
+        .nav-sub { 
+            font-size: 13px; 
+            opacity: 0.9; 
+            letter-spacing: 1px; 
+            font-weight: normal; 
+        }
 
-        /* --- 3. 操作面板 (Controls Panel) --- */
+        /* ==========================================================================
+           4. 載入畫面 (Loading Overlay)
+           ========================================================================== */
+        #loading-overlay {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(255,255,255,0.98); 
+            z-index: 999;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            flex-direction: column; 
+            font-weight: bold; 
+            color: #0097D7;
+        }
+
+        /* ==========================================================================
+           5. 控制面板區塊 (Controls)
+           ========================================================================== */
         .controls { 
             background: white; 
-            padding: 24px; 
+            padding: 20px; 
             border-radius: 16px; 
             box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
             display: flex; 
-            gap: 16px; 
-            align-items: flex-end; 
-            margin-bottom: 24px; 
-            flex-wrap: wrap; 
-            justify-content: center; 
-            max-width: 800px;
+            flex-direction: column; 
+            gap: 15px;
+            margin-bottom: 20px; 
+            max-width: 600px; 
             width: 90%;
         }
+
+        .mode-switch-container {
+            display: flex; 
+            background: #f1f3f5; 
+            padding: 4px; 
+            border-radius: 8px;
+        }
+        .mode-btn {
+            flex: 1; 
+            padding: 10px; 
+            text-align: center; 
+            cursor: pointer;
+            font-weight: bold; 
+            border-radius: 6px; 
+            color: #666; 
+            transition: all 0.3s ease; 
+            font-size: 14px;
+        }
+        .mode-btn.active { 
+            background-color: #0097D7; 
+            color: white; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+
+        .input-stack {
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            width: 100%;
+        }
         
-        .input-group { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 250px; }
-        label { font-size: 13px; font-weight: 700; color: #555; margin-left: 2px; }
+        .input-group { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 6px; 
+            width: 100%; 
+        }
+        
+        label { 
+            font-size: 13px; 
+            font-weight: 700; 
+            color: #555; 
+            margin-left: 2px; 
+            display: flex; 
+            justify-content: space-between; 
+        }
+        
         input, select { 
-            padding: 10px 14px; 
-            font-size: 15px; 
+            padding: 12px; 
+            font-size: 16px; 
             border: 1px solid #e0e0e0; 
             border-radius: 8px; 
             width: 100%; 
             background-color: #fdfdfd;
             transition: border-color 0.2s;
         }
-        input:focus, select:focus { border-color: #0097D7; outline: none; }
+        input:focus, select:focus { 
+            border-color: #0097D7; 
+            outline: none; 
+        }
         
-        /* 警告訊息 */
         .warning-msg {
             display: none; 
             color: #dc3545; 
-            font-size: 13px; 
-            line-height: 1.4;
-            margin-top: 6px; 
-            background-color: #ffe6e6; 
-            padding: 10px; 
-            border-radius: 6px; 
+            font-size: 12px; 
+            margin-top: 4px;
+            background-color: #fff5f5; 
+            padding: 8px; 
+            border-radius: 4px; 
             border: 1px solid #ffcccc;
         }
         
-        /* 按鈕組與下載 */
-        .btn-group-vertical { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 250px; }
-        
+        /* ==========================================================================
+           6. 按鈕樣式 (Buttons)
+           ========================================================================== */
+        .btn-group-vertical { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            width: 100%; 
+            margin-top: 10px; 
+        }
         .btn-base {
             padding: 0 20px; 
             font-size: 15px; 
             font-weight: bold; 
-            color: white; 
+            color: white;
             border: none; 
             border-radius: 8px; 
             cursor: pointer; 
-            height: 44px; 
+            height: 48px; 
             width: 100%;
             display: flex; 
             align-items: center; 
-            justify-content: center;
+            justify-content: center; 
             transition: filter 0.2s;
         }
         .btn-base:hover { filter: brightness(1.1); }
         .btn-base:disabled { background-color: #ccc !important; cursor: wait; }
-
+        
         .btn-png { background-color: #0097D7; }
         .btn-svg { background-color: #20c997; } 
         
-        .btn-hint { font-size: 12px; color: #666; text-align: center; margin-top: -5px; }
+        .btn-hint { 
+            font-size: 12px; 
+            color: #888; 
+            text-align: center; 
+            margin-top: -5px; 
+        }
 
-        /* --- 4. 預覽區 (Preview Area) --- */
+        /* ==========================================================================
+           7. 預覽區樣式 (Preview Area)
+           ========================================================================== */
+        .preview-wrapper {
+            width: 100%; 
+            max-width: 600px; 
+            margin: 0 auto;
+            text-align: center;
+        }
+        .preview-label {
+            font-size: 12px; 
+            color: #888; 
+            margin-bottom: 5px; 
+            font-weight: bold; 
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
         .preview-container { 
             position: relative; 
-            width: 500px; 
-            max-width: 90vw; 
-            aspect-ratio: 1 / 1; 
-            padding: 0; 
-            border: none;
-            box-shadow: none;
-            background-color: transparent; 
-            margin: 0 auto; 
-            display: flex;
-            align-items: center;
+            width: 100%; 
+            aspect-ratio: 1000 / 665;
+            border: 1px solid #eee; 
+            background-color: #fff; 
+            box-sizing: border-box; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            display: flex; 
+            align-items: center; 
             justify-content: center;
-            transition: background-color 0.3s;
+            overflow: hidden;
         }
-        
-        #svg-preview-box {
-            width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
+        #svg-preview-box { 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
         }
-
         #svg-preview-box svg { 
-            max-width: 100%; max-height: 100%; 
-            width: auto; height: auto; display: block; 
-            filter: drop-shadow(0px 5px 10px rgba(0,0,0,0.1));
+            width: 100%; 
+            height: 100%; 
+            display: block; 
         }
 
-        /* --- 5. 手機版全螢幕 Overlay --- */
-        .mobile-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 2000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            padding: 20px;
-        }
-        .mobile-overlay img { max-width: 100%; border: 2px solid white; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .mobile-overlay p { color: white; font-weight: bold; text-align: center; line-height: 1.6; font-size: 16px; margin-bottom: 15px; }
-        .close-overlay { padding: 12px 40px; background: #0097D7; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 15px; }
-        
-        /* 除錯與載入 */
-        #debug-console { 
-            display: none; width: 90%; max-width: 800px; background: #333; color: #fff; 
-            padding: 15px; margin-bottom: 20px; border-radius: 8px; font-family: monospace; font-size: 12px; 
-            white-space: pre-wrap; border: 2px solid #ff4444;
-        }
-
-        #loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.95); z-index: 999;
-            display: flex; justify-content: center; align-items: center;
-            flex-direction: column;
-            font-weight: bold; color: #0097D7;
-        }
-
-        /* --- 6. 底部 Footer --- */
+        /* ==========================================================================
+           8. Footer 樣式
+           ========================================================================== */
         .footer { 
             margin-top: auto; 
             padding: 40px 20px; 
             width: 100%; 
             text-align: center; 
             color: #666; 
-            font-size: 14px;
-            line-height: 1.8; 
-            background-color: #fff;
-            border-top: 1px solid #eee;
+            font-size: 13px; 
+            line-height: 1.6; 
+            border-top: 1px solid #eee; 
+            background: white; 
         }
-        
-        .footer-block { margin-bottom: 15px; } 
-
-        .footer-link {
-            color: #333; 
-            text-decoration: none;
-            font-weight: bold;
-            border-bottom: 1px dotted #999; 
-            transition: color 0.2s, border-bottom 0.2s;
-        }
-        .footer-link:hover { color: #0097D7; border-bottom: 1px solid #0097D7; }
-
-        .footer-link-blue {
+        .footer-link-blue { 
             color: #0097D7; 
-            text-decoration: none;
-            font-weight: bold;
-            transition: opacity 0.2s;
+            text-decoration: none; 
+            font-weight: bold; 
         }
-        .footer-link-blue:hover { opacity: 0.8; text-decoration: underline; }
 
-        .copyright-warning { 
-            margin-top: 20px; 
-            padding-top: 15px;
-            border-top: 1px dashed #eee; 
+        /* ==========================================================================
+           9. 開發日誌 Modal 視窗樣式
+           ========================================================================== */
+        .modal-overlay {
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5); 
+            z-index: 2000;
+            justify-content: center; 
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+        .modal-box {
+            background: white; 
+            width: 90%; 
+            max-width: 600px; 
+            max-height: 80vh;
+            border-radius: 12px; 
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            overflow-y: auto; 
+            position: relative;
+            font-family: 'Noto Sans TC', sans-serif; 
+            text-align: left;
+        }
+        .modal-header {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border-bottom: 1px solid #eee; 
+            padding-bottom: 15px; 
+            margin-bottom: 15px;
+        }
+        .modal-title { 
+            font-size: 20px; 
+            font-weight: bold; 
+            color: #0097D7; 
+        }
+        .close-btn { 
+            background: none; 
+            border: none; 
+            font-size: 24px; 
+            color: #999; 
+            cursor: pointer; 
+        }
+        .close-btn:hover { color: #333; }
+        
+        /* 日誌內容排版 */
+        .log-entry { margin-bottom: 20px; }
+        .log-date { 
             font-size: 12px; 
-            color: #aaa; 
-            font-style: italic; 
+            color: #888; 
+            font-weight: bold; 
+            margin-bottom: 4px; 
+            display: block;
+        }
+        .log-ver { 
+            font-size: 16px; 
+            font-weight: bold; 
+            color: #333; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+        }
+        .log-tag { 
+            font-size: 11px; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            color: white; 
+            vertical-align: middle; 
+        }
+        .tag-feat { background: #20c997; } 
+        .tag-init { background: #6c757d; } 
+        
+        .log-desc { 
+            margin-top: 5px; 
+            font-size: 14px; 
+            color: #555; 
+            line-height: 1.6; 
+        }
+        .log-desc ul { 
+            margin: 5px 0 0 20px; 
+            padding: 0; 
+        }
+        .log-desc li { margin-bottom: 3px; }
+
+        /* ==========================================================================
+           10. ★★★ 手機版圖片預覽 Overlay 樣式 (V2.0 邏輯) ★★★
+           ========================================================================== */
+        .mobile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+            text-align: center;
+        }
+        .mobile-overlay img {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        .mobile-overlay p {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 10px;
             line-height: 1.5;
+        }
+        .mobile-overlay .close-overlay {
+            padding: 12px 30px;
+            background: #0097D7;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,151,215,0.3);
         }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay"><div>正在讀取資源...</div></div>
+    <div id="loading-overlay">
+        <div>系統載入中...<br><span style="font-size:12px;color:#999">Initialize...</span></div>
+    </div>
 
     <nav class="navbar">
-        <span class="nav-main">JCI Logo Generator V2.0</span>
-        <span class="nav-sub">SVG AVAILABLE EDITION</span>
+        <span class="nav-main">JCI Logo Generator v3.0</span>
+        <span class="nav-sub">Official & Safe Font Edition</span>
     </nav>
 
-    <div id="debug-console">系統初始化中...</div>
-
     <div class="controls">
-        <div class="input-group">
-            <label>分會名稱 / Chapter Name (Line 1)</label>
-            <input type="text" id="chapterInput1" value="Dayuan" oninput="updatePreview()">
-            <div id="lengthWarning" class="warning-msg">
-                ⚠️ 文字過長 (超出盾牌右緣)<br>
-                <span style="font-size:12px; color:#c82333;">⚠️ Text too long (Exceeds shield edge)</span>
+        <div class="mode-switch-container">
+            <div id="mode-world" class="mode-btn active" onclick="switchMode('world')">🌍 世界總會版 (World)</div>
+            <div id="mode-taiwan" class="mode-btn" onclick="switchMode('taiwan')">🇹🇼 台灣總會版 (Taiwan)</div>
+        </div>
+
+        <div class="input-stack">
+            <div class="input-group">
+                <label id="label-line1">分會名稱 (Line 1)</label>
+                <input type="text" id="chapterInput1" value="Dayuan" oninput="updatePreview()">
+                <div id="lengthWarning" class="warning-msg">⚠️ 文字過長 (超出盾牌範圍)</div>
             </div>
-        </div>
-        <div class="input-group">
-            <label>分會名稱 / Chapter Name (Line 2)</label>
-            <input type="text" id="chapterInput2" value="" placeholder="(選填)" oninput="updatePreview()">
-        </div>
-        <div class="input-group">
-            <label>Logo 樣式 / Style</label>
-            <select id="logoSelect" onchange="updatePreview()">
-                <option value="New JCI Logo (SVG)_Primary.svg|none|jci-blue|transparent">Primary (白底藍字)</option>
-                <option value="New JCI Logo (SVG)_Secondary - White on JCI Blue.svg|none|white|transparent">Blue Background (藍底白字)</option>
-                <option value="New JCI Logo (SVG).svg|#1c1f2a|white|jci-black">Dark Background (去背全白)</option>
-                <option value="New JCI Logo (SVG)_Secondary - Inverted Color on JCI Black.svg|#1c1f2a|white|transparent">Inverted (黑底白字)</option>
-                <option value="New JCI Logo (SVG)_Secondary - JCI Black.svg|none|pure-black|transparent">Black Text (全黑)</option>
-            </select>
-        </div>
-        <div class="input-group">
-            <label>檔案大小 / File Size</label>
-            <select id="sizeSelect">
-                <option value="1">小 / Small (1000px)</option>
-                <option value="3" selected>中 / Medium (3000px)</option>
-                <option value="5">大 / Large (5000px)</option>
-            </select>
+            
+            <div class="input-group">
+                <label id="label-line2">分會名稱 (Line 2, 選填)</label>
+                <input type="text" id="chapterInput2" value="" placeholder="(選填)" oninput="updatePreview()">
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <div class="input-group" style="flex:1">
+                    <label>樣式 / Style</label>
+                    <select id="logoSelect" onchange="updatePreview()">
+                        <option value="New JCI Logo (SVG)_Primary.svg|none|jci-blue|transparent">Primary (白底藍字)</option>
+                        <option value="New JCI Logo (SVG)_Secondary - White on JCI Blue.svg|none|white|transparent">Blue Background (藍底白字)</option>
+                        <option value="New JCI Logo (SVG).svg|#1c1f2a|white|jci-black">Dark Background (去背全白)</option>
+                        <option value="New JCI Logo (SVG)_Secondary - Inverted Color on JCI Black.svg|#1c1f2a|white|transparent">Inverted (黑底白字)</option>
+                        <option value="New JCI Logo (SVG)_Secondary - JCI Black.svg|none|pure-black|transparent">Black Text (全黑)</option>
+                    </select>
+                </div>
+                <div class="input-group" style="flex:1">
+                    <label>大小 / Size</label>
+                    <select id="sizeSelect">
+                        <option value="1">小 (1x)</option>
+                        <option value="3" selected>中 (3x)</option>
+                        <option value="5">大 (5x)</option>
+                    </select>
+                </div>
+            </div>
         </div>
         
         <div class="btn-group-vertical">
-            <button class="btn-base btn-png" onclick="downloadFile('png')">下載 PNG 圖片 / Download PNG</button>
+            <button class="btn-base btn-png" onclick="downloadFile('png')">下載 PNG 圖片</button>
             <div class="btn-hint">(Transparent Background)</div>
-            <button class="btn-base btn-svg" onclick="downloadFile('svg')">下載 SVG 向量 / Download SVG</button>
-            <div class="btn-hint">(Outlined Text / Vector)</div>
+            <button class="btn-base btn-svg" onclick="downloadFile('svg')">下載 SVG 向量</button>
+            <div class="btn-hint">(Vector / Outlined Text)</div>
         </div>
     </div>
 
-    <div class="preview-container" id="previewContainer">
-        <div id="svg-preview-box">正在載入字型資源...</div>
+    <div class="preview-wrapper">
+        <div class="preview-label">▼ 預覽區 (Preview Area) ▼</div>
+        <div class="preview-container" id="previewContainer">
+            <div id="svg-preview-box"></div>
+        </div>
     </div>
 
     <div class="footer">
         <div class="footer-block">
             Designed & Developed by 
-            <a href="https://www.facebook.com/zhenhui.lin/" target="_blank" class="footer-link-blue">Chenghui Lin</a><br>
+            <a href="https://www.facebook.com/zhenhui.lin/" target="_blank" class="footer-link-blue">Chenghui Lin</a>
+            <br>
             (2023 President, JCI Dayuan)
         </div>
         <div class="footer-block">
-            <a href="https://www.jcidayuan.site/" target="_blank" class="footer-link">桃園市大園國際青年商會</a> 
-            <a href="https://www.facebook.com/zhenhui.lin/" target="_blank" class="footer-link-blue">2023年會長 林振暉</a> 製作<br>
-            Copyright &copy; 2026 Chenghui Lin. All rights reserved.
+            <a href="https://www.jcidayuan.site/" target="_blank" class="footer-link-blue">桃園市大園國際青年商會</a> 製作
         </div>
-        <div class="copyright-warning">
-            本程式由 2023 大園青商 林振暉 會長為服務 JCI 夥伴免費開發。<br>
-            歡迎廣泛使用，惟請尊重原創開發者成果，請勿私自盜用、修改或宣稱為個人作品。
+        <div style="margin-top: 15px; font-size: 12px;">
+            <a href="javascript:void(0)" onclick="openModal()" style="color:#0097D7; text-decoration:none; border-bottom:1px dashed #0097D7; font-weight:bold;">
+                📜 查看開發日誌 (Changelog)
+            </a>
+        </div>
+    </div>
+
+    <div id="devLogModal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">🚀 開發演進日誌</div>
+                <button class="close-btn" onclick="closeModalBtn()">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="log-entry">
+                    <span class="log-date">2026/01/15 - Present</span>
+                    <div class="log-ver"><span class="log-tag tag-feat">V3.0</span> 在地化與智慧排版</div>
+                    <div class="log-desc">
+                        解決台灣分會特有的「中英並列」排版難題。
+                        <ul>
+                            <li><strong>🇹🇼 台灣總會版：</strong>實作獨有的雙行排版，並針對中英文採用獨立座標系統，確保像素級對齊。</li>
+                            <li><strong>Smart Layout 引擎：</strong>開發紅線演算法，文字過長自動縮小，確保不超出盾牌邊界；並具備分散對齊功能。</li>
+                            <li><strong>字體優化：</strong>改用 Arial (英) 與 Noto Sans TC (中) 確保跨平台顯示一致且合法。</li>
+                        </ul>
+                    </div>
+                </div>
+                <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+                
+                <div class="log-entry">
+                    <span class="log-date">2026/01/08</span>
+                    <div class="log-ver"><span class="log-tag tag-feat">V2.0</span> 向量革命</div>
+                    <div class="log-desc">
+                        為了應對大型輸出需求，捨棄 Canvas 改採 SVG 技術重寫核心。
+                        <ul>
+                            <li><strong>雙格式輸出：</strong>新增 .svg 向量檔下載，支援 AI 編輯。</li>
+                            <li><strong>畫質提升：</strong>解決 PNG 邊緣鋸齒問題，實現無限放大不失真。</li>
+                        </ul>
+                    </div>
+                </div>
+                <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+                
+                <div class="log-entry">
+                    <span class="log-date">2025/12/04</span>
+                    <div class="log-ver"><span class="log-tag tag-init">V1.0</span> 原型誕生</div>
+                    <div class="log-desc">
+                        快速解決會友找不到去背 Logo 或顏色錯誤的痛點。
+                        <ul>
+                            <li>內建 JCI 官方 5 種標準配色。</li>
+                            <li>支援即時圖片生成 (PNG)。</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="margin-top:20px; text-align:center; color:#ccc; font-size:12px;">
+                    Developed with ❤️ by JCI Dayuan
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // --- 核心配置 (完全保留原始座標與參數) ---
-        const LOGO_CONFIG = {
-            baseWidth: 1000, 
-            line1: { xPercent: 11.8, yPercent: 64.8, sizePx: 81, spacing: -0.3 },
-            line2: { xPercent: 11.8, yPercent: 73.6, sizePx: 81, spacing: -0.3 }
+        // ----------------------------------------
+        // 1. CONFIG 設定檔 (V3.0 Final)
+        // ----------------------------------------
+        const CONFIG = {
+            baseWidth: 1000,
+            
+            // 世界總會版
+            world: {
+                line1: { xPercent: 11.8, yPercent: 64.8, sizePx: 81, spacing: -0.3 },
+                line2: { xPercent: 11.8, yPercent: 73.6, sizePx: 81, spacing: -0.3 },
+                defaultText1: "Dayuan",
+                defaultText2: ""
+            },
+
+            // 台灣總會版 (嚴格鎖定參數)
+            taiwan: {
+                // 英文 Line 1
+                line1: { 
+                    startX: 11.829, 
+                    limitX: 74.8, 
+                    yPercent: 65.9, 
+                    sizePx: 74 
+                },
+                // 中文 Line 2
+                line2: { 
+                    startX: 12.2, 
+                    limitX: 75.2, 
+                    yPercent: 75.0, 
+                    sizePx: 56 
+                },
+                
+                defaultText1: "Dayuan,Taiwan",
+                defaultText2: "桃園市大園國際青年商會"
+            }
         };
 
-        let currentFont = null;
+        let currentMode = 'world'; 
+        let fontWorld = null; // Plus Jakarta Sans
+        let fontTwEn = null;  // Arial
+        let fontTwCh = null;  // Noto Sans TC
         let svgForDownload = "";
 
-        function log(msg) {
-            const box = document.getElementById('debug-console');
-            if(box) {
-                box.style.display = 'block';
-                box.innerHTML += '<div>> ' + msg + '</div>';
-            }
-            console.log(msg);
+        // ----------------------------------------
+        // 2. Modal 視窗控制
+        // ----------------------------------------
+        function openModal() { 
+            document.getElementById('devLogModal').style.display = 'flex'; 
+            document.body.style.overflow = 'hidden'; 
+        }
+        function closeModalBtn() { 
+            document.getElementById('devLogModal').style.display = 'none'; 
+            document.body.style.overflow = 'auto'; 
+        }
+        function closeModal(e) { 
+            if (e.target.id === 'devLogModal') closeModalBtn(); 
         }
 
+        // ----------------------------------------
+        // 3. 初始化與字體載入 (Window Onload)
+        // ----------------------------------------
         window.onload = function() {
-            // 基礎安全性檢查
-            if (window.location.protocol === 'file:') {
-                log("⚠️ 警告：請使用 GitHub Pages 或 Local Server。");
-                alert("Please use Local Server or GitHub Pages.\n直接開啟檔案會導致圖片無法讀取！");
-                return;
-            }
+            let loadedCount = 0; 
+            const totalFonts = 3; 
+            const statusBox = document.querySelector('#loading-overlay div');
 
-            // 載入字型
-            opentype.load('PlusJakartaSans-Bold.ttf', function(err, font) {
-                if (err) {
-                    log("❌ 字型載入錯誤: 找不到 'PlusJakartaSans-Bold.ttf'");
-                } else {
-                    currentFont = font;
-                    document.getElementById('loading-overlay').style.display = 'none';
-                    updatePreview();
+            const updateStatus = (fontName, success) => {
+                loadedCount++;
+                const icon = success ? '✅' : '❌';
+                statusBox.innerHTML = `
+                    系統載入中...<br>
+                    <span style="font-size:12px;color:#666">
+                        Progress: ${loadedCount} / ${totalFonts}<br>
+                        ${icon} ${fontName} ${success ? 'Ready' : 'Failed'}
+                    </span>
+                `;
+
+                if(loadedCount >= totalFonts) { 
+                    setTimeout(() => { 
+                        document.getElementById('loading-overlay').style.display = 'none'; 
+                        switchMode('world'); 
+                    }, 500); 
                 }
+            };
+
+            // 載入字體檔案 (必須確保這三個檔案在目錄中)
+            opentype.load('PlusJakartaSans-Bold.ttf', function(err, font) { 
+                if (err) updateStatus('PlusJakartaSans', false); 
+                else { fontWorld = font; updateStatus('PlusJakartaSans', true); }
+            });
+
+            opentype.load('arialbd.ttf', function(err, font) { 
+                if (err) updateStatus('Arial', false); 
+                else { fontTwEn = font; updateStatus('Arial', true); }
+            });
+
+            opentype.load('NotoSansTC-Bold.ttf', function(err, font) { 
+                if (err) updateStatus('NotoSansTC', false); 
+                else { fontTwCh = font; updateStatus('NotoSansTC', true); }
             });
         };
 
-        // --- 核心渲染邏輯 (逐字 Glyphs 渲染以保留 Kerning) ---
+        // ----------------------------------------
+        // 4. 模式切換 (Switch Mode)
+        // ----------------------------------------
+        function switchMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('mode-' + mode).classList.add('active');
+
+            const settings = CONFIG[mode];
+            document.getElementById('chapterInput1').value = settings.defaultText1;
+            document.getElementById('chapterInput2').value = settings.defaultText2;
+
+            if(mode === 'taiwan') {
+                document.getElementById('label-line1').innerText = "分會英文名稱 (English)";
+                document.getElementById('label-line2').innerText = "分會中文名稱 (Chinese)";
+                document.getElementById('lengthWarning').style.display = 'none';
+            } else {
+                document.getElementById('label-line1').innerText = "分會名稱 (Line 1)";
+                document.getElementById('label-line2').innerText = "分會名稱 (Line 2)";
+            }
+            updatePreview();
+        }
+
+        // ----------------------------------------
+        // 5. 更新預覽 (Update Preview) - 核心繪圖邏輯
+        // ----------------------------------------
         async function updatePreview() {
-            if (!currentFont) return;
+            const fWorld = fontWorld || fontTwEn; 
+            const fTwEn = fontTwEn || fontWorld; 
+            const fTwCh = fontTwCh || fontWorld;
+
+            if (!fWorld && !fTwEn) return;
             
             const parts = document.getElementById('logoSelect').value.split('|');
             const fileName = parts[0], bgToRemove = parts[1], colorType = parts[2], uiBgMode = parts[3];
 
-            // 預覽區容器填色修正
-            const pc = document.getElementById('previewContainer');
-            pc.style.backgroundColor = (uiBgMode === 'jci-black') ? '#1C1F2A' : 'transparent';
-
-            // 顏色定義 (包含 Pure Black)
+            document.getElementById('previewContainer').style.backgroundColor = (uiBgMode === 'jci-black') ? '#1C1F2A' : 'transparent';
             const colors = { 'jci-blue': '#0097D7', 'white': '#FFFFFF', 'black': '#1C1F2A', 'pure-black': '#000000' };
             const textColor = colors[colorType] || '#0097D7';
 
             try {
                 const resp = await fetch(fileName);
-                if (!resp.ok) throw new Error("SVG 載入失敗: " + fileName);
+                if (!resp.ok) throw new Error("SVG 載入失敗");
                 const rawSvg = await resp.text();
 
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(rawSvg, "image/svg+xml");
                 const svgEl = doc.documentElement;
 
-                // 處理預覽時的去背邏輯
                 svgEl.querySelectorAll('path, rect, polygon, circle').forEach(el => {
                     const fill = el.getAttribute('fill');
-                    if (fill && fill.toLowerCase() === bgToRemove.toLowerCase()) {
-                        // Inverted 模式預覽時「不要」移除背景，否則看不見白字
-                        if (!(fileName.includes("Inverted") && bgToRemove === '#1c1f2a')) el.style.display = 'none';
+                    if (fill && fill.toLowerCase() === bgToRemove.toLowerCase()) { 
+                        if (!(fileName.includes("Inverted") && bgToRemove === '#1c1f2a')) el.style.display = 'none'; 
                     }
-                    // Style 3：預覽容器已補色，故 SVG 內部的背景要移除
                     if (uiBgMode === 'jci-black' && fill && fill.toLowerCase() === '#1c1f2a') el.style.display = 'none';
                 });
 
-                // 尺寸標準化 (ViewBox 處理)
                 let width = 1000, height = 665;
-                if (svgEl.hasAttribute('viewBox')) {
-                    const vb = svgEl.getAttribute('viewBox').split(/[\s,]+/);
-                    width = parseFloat(vb[2]); height = parseFloat(vb[3]);
+                if (svgEl.hasAttribute('viewBox')) { 
+                    const vb = svgEl.getAttribute('viewBox').split(/[\s,]+/); 
+                    width = parseFloat(vb[2]); height = parseFloat(vb[3]); 
                 }
-                const scaleFactor = width / LOGO_CONFIG.baseWidth;
+                const scaleFactor = width / CONFIG.baseWidth;
 
                 const t1 = document.getElementById('chapterInput1').value;
                 const t2 = document.getElementById('chapterInput2').value;
+                const settings = CONFIG[currentMode];
 
-                // 高階文字渲染函式
-                const createAdvancedPath = (text, config) => {
-                    if (!text) return "";
-                    const startX = width * (config.xPercent / 100);
-                    const fontSize = config.sizePx * scaleFactor;
-                    const baselineY = (height * (config.yPercent / 100)) + fontSize;
-                    const extraSpacing = (config.spacing || 0) * scaleFactor;
-
-                    const combinedPath = new opentype.Path();
-                    let cursorX = startX;
-                    const glyphs = currentFont.stringToGlyphs(text);
-
-                    for (let i = 0; i < glyphs.length; i++) {
-                        const glyph = glyphs[i];
-                        combinedPath.extend(glyph.getPath(cursorX, baselineY, fontSize));
-                        cursorX += (glyph.advanceWidth * (fontSize / currentFont.unitsPerEm));
-                        if (i < glyphs.length - 1) {
-                            cursorX += currentFont.getKerningValue(glyph, glyphs[i + 1]) * (fontSize / currentFont.unitsPerEm);
-                        }
-                        cursorX += extraSpacing;
-                    }
-                    combinedPath.fill = textColor;
-                    return combinedPath.toSVG(2);
-                };
-
-                // 將文字路徑注入 SVG
                 const g = doc.createElementNS("http://www.w3.org/2000/svg", "g");
-                g.innerHTML = createAdvancedPath(t1, LOGO_CONFIG.line1) + createAdvancedPath(t2, LOGO_CONFIG.line2);
-                svgEl.appendChild(g);
 
-                // 序列化顯示
+                if (currentMode === 'world') {
+                    // 世界版繪圖
+                    const p1 = createStandardPath(t1, settings.line1, fWorld, width, height, scaleFactor, textColor);
+                    const p2 = createStandardPath(t2, settings.line2, fWorld, width, height, scaleFactor, textColor);
+                    g.innerHTML = p1 + p2;
+
+                    if(fWorld) {
+                        const w1 = fWorld.getAdvanceWidth(t1, settings.line1.sizePx * scaleFactor);
+                        document.getElementById('lengthWarning').style.display = (w1 > width * 0.55) ? 'block' : 'none';
+                    }
+                } else {
+                    // 台灣版繪圖 (獨立座標 + Smart Fit)
+                    document.getElementById('lengthWarning').style.display = 'none';
+                    
+                    const l1Start = width * (settings.line1.startX / 100);
+                    const l1Limit = width * (settings.line1.limitX / 100);
+                    const l1Target = l1Limit - l1Start;
+                    
+                    const l2Start = width * (settings.line2.startX / 100);
+                    const l2Limit = width * (settings.line2.limitX / 100);
+                    const l2Target = l2Limit - l2Start;
+
+                    const p1 = createSmartFitPath(t1, settings.line1, fTwEn, l1Start, height, scaleFactor, l1Target, textColor);
+                    const p2 = createSmartFitPath(t2, settings.line2, fTwCh, l2Start, height, scaleFactor, l2Target, textColor);
+
+                    g.innerHTML = p1 + p2;
+                }
+
+                svgEl.appendChild(g);
                 svgForDownload = new XMLSerializer().serializeToString(svgEl);
                 document.getElementById('svg-preview-box').innerHTML = svgForDownload;
 
-                // 長度警告偵測
-                const w1 = currentFont.getAdvanceWidth(t1, LOGO_CONFIG.line1.sizePx * scaleFactor);
-                document.getElementById('lengthWarning').style.display = (w1 > width * 0.55) ? 'block' : 'none';
-
-            } catch (err) {
-                log("❌ 渲染失敗: " + err.message);
-            }
+            } catch (err) { console.error(err); }
         }
 
-        // --- 下載處理邏輯 (手機 Safari Overlay / PNG 去背) ---
+        // ----------------------------------------
+        // 6. 字體路徑產生器 (Path Generators)
+        // ----------------------------------------
+        function createStandardPath(text, config, font, width, height, scale, color) {
+            if (!text || !font) return "";
+            const startX = width * (config.xPercent / 100);
+            const fontSize = config.sizePx * scale;
+            const baselineY = (height * (config.yPercent / 100)) + fontSize;
+            return generatePathString(text, font, startX, baselineY, fontSize, (config.spacing || 0) * scale, color);
+        }
+
+        function createSmartFitPath(text, config, font, startX, height, scale, targetWidth, color) {
+            if (!text || !font) return "";
+            const stdFontSize = config.sizePx * scale;
+            const rawWidth = font.getAdvanceWidth(text, stdFontSize);
+            let finalFontSize = stdFontSize; 
+            let finalSpacing = 0;
+
+            if (rawWidth < targetWidth) {
+                // 分散對齊邏輯 (Dispersion)
+                const gap = targetWidth - rawWidth;
+                const charCount = text.length;
+                if (charCount > 1) { finalSpacing = gap / (charCount - 1); }
+            } else {
+                // 自動縮放邏輯 (Auto Scale)
+                const ratio = targetWidth / rawWidth;
+                finalFontSize = stdFontSize * ratio;
+            }
+            const baselineY = (height * (config.yPercent / 100)) + stdFontSize; 
+            return generatePathString(text, font, startX, baselineY, finalFontSize, finalSpacing, color);
+        }
+
+        function generatePathString(text, font, x, y, fontSize, spacing, color) {
+            const combinedPath = new opentype.Path();
+            let cursorX = x;
+            const glyphs = font.stringToGlyphs(text);
+
+            for (let i = 0; i < glyphs.length; i++) {
+                const glyph = glyphs[i];
+                combinedPath.extend(glyph.getPath(cursorX, y, fontSize));
+                cursorX += (glyph.advanceWidth * (fontSize / font.unitsPerEm));
+                if (i < glyphs.length - 1) { 
+                    cursorX += font.getKerningValue(glyph, glyphs[i + 1]) * (fontSize / font.unitsPerEm); 
+                }
+                cursorX += spacing;
+            }
+            combinedPath.fill = color;
+            return combinedPath.toSVG(2);
+        }
+
+        // ----------------------------------------
+        // 7. 檔案下載邏輯 (V2.0 Logic - Mobile Overlay)
+        // ----------------------------------------
         async function downloadFile(type) {
             if (!svgForDownload) return;
             const name = "JCI_" + (document.getElementById('chapterInput1').value || "Logo").replace(/[^a-zA-Z0-9]/g, "_");
@@ -436,39 +831,35 @@
                 const parts = document.getElementById('logoSelect').value.split('|');
                 const bgToRemove = parts[1];
 
-                // PNG 下載強制執行「JCI BLACK (#1C1F2A)」去背
+                // 處理 PNG 透明背景
                 if (type === 'png' && bgToRemove !== 'none') {
                     const doc = new DOMParser().parseFromString(svgProcessed, "image/svg+xml");
                     doc.querySelectorAll('rect, path, polygon').forEach(el => {
                         const fill = el.getAttribute('fill');
-                        // 精確剔除背景色或純黑
-                        if (fill && (fill.toLowerCase() === '#1c1f2a' || fill.toLowerCase() === '#000000' || fill.toLowerCase() === 'black')) {
-                            el.remove();
-                        }
+                        if (fill && (fill.toLowerCase() === '#1c1f2a' || fill.toLowerCase() === '#000000' || fill.toLowerCase() === 'black')) el.remove();
                     });
                     svgProcessed = new XMLSerializer().serializeToString(doc.documentElement);
                 }
-
-                // 強制注入 XML Namespace
-                if (!svgProcessed.includes('xmlns=')) {
-                    svgProcessed = svgProcessed.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+                // 補上 xmlns 避免錯誤
+                if (!svgProcessed.includes('xmlns=')) { 
+                    svgProcessed = svgProcessed.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '); 
                 }
 
                 if (type === 'svg') {
-                    // SVG 下載保留背景 (符合需求)
+                    // SVG 直接下載
                     const blob = new Blob([svgProcessed], {type: "image/svg+xml;charset=utf-8"});
                     triggerDL(URL.createObjectURL(blob), name + ".svg");
                 } else {
-                    // PNG 下載 (Canvas 繪圖)
+                    // PNG 轉檔下載
                     const scale = parseInt(document.getElementById('sizeSelect').value);
                     const img = new Image();
                     const url = URL.createObjectURL(new Blob([svgProcessed], {type: "image/svg+xml;charset=utf-8"}));
-
+                    
+                    // 等待圖片載入
                     await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
 
                     const vbMatch = svgProcessed.match(/viewBox="([^"]+)"/);
                     const vb = vbMatch ? vbMatch[1].split(/[\s,]+/) : [0, 0, 1000, 665];
-                    
                     const canvas = document.createElement('canvas');
                     canvas.width = parseFloat(vb[2]) * scale; 
                     canvas.height = parseFloat(vb[3]) * scale;
@@ -476,17 +867,18 @@
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     URL.revokeObjectURL(url);
-
-                    const pngData = canvas.toDataURL("image/png");
                     
-                    // 手機端 (iOS/Android) 顯示長按提示層
+                    const pngData = canvas.toDataURL("image/png");
+
+                    // ★★★ 手機版 / LINE 內建瀏覽器邏輯 (V2.0 Mobile Overlay) ★★★
                     if (/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         const overlay = document.createElement('div');
                         overlay.className = 'mobile-overlay';
                         overlay.innerHTML = `
-                            <p>圖片已生成！<br>請長按下方圖片並選擇「儲存圖片」</p>
+                            <p style="font-weight:bold; color:#0097D7; font-size:18px;">圖片已生成！</p>
+                            <p>請「長按下方圖片」並選擇「儲存圖片」<br>(Long press image to save)</p>
                             <img src="${pngData}">
-                            <button class="close-overlay" onclick="this.parentElement.remove()">完成並返回</button>
+                            <button class="close-overlay" onclick="this.parentElement.remove()">完成並返回 (Close)</button>
                         `;
                         document.body.appendChild(overlay);
                     } else { 
@@ -495,7 +887,8 @@
                     }
                 }
             } catch (e) { 
-                log("❌ 下載錯誤: " + e.message); 
+                console.error(e); 
+                alert("錯誤: " + e.message); 
             } finally { 
                 btn.innerText = oldText; btn.disabled = false; 
             }
@@ -504,8 +897,10 @@
         function triggerDL(url, name) {
             const a = document.createElement('a'); 
             a.href = url; a.download = name; 
-            document.body.appendChild(a); a.click(); 
+            document.body.appendChild(a); 
+            a.click(); 
             document.body.removeChild(a); 
+            if(url.startsWith('blob:')) setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
     </script>
 </body>
