@@ -7,6 +7,7 @@
     
     <script>
         window.onerror = function(msg, url, line) {
+            // 忽略 ResizeObserver 的良性錯誤
             if (msg.indexOf('ResizeObserver') !== -1) return;
             console.log('系統訊息: ' + msg);
         };
@@ -16,18 +17,17 @@
 
     <style>
         /* ==========================================================================
-           1. 字體定義 (Fonts)
+           1. 字體定義 (Fonts) - 全面採用開源字體，確保商用合法性
            ========================================================================== */
+        
+        /* Plus Jakarta Sans (取代 Helvetica/Arial，作為主要英文字體) */
         @font-face { 
             font-family: 'Plus Jakarta Sans'; 
             src: url('PlusJakartaSans-Bold.ttf') format('truetype'); 
             font-weight: bold; 
         }
-        @font-face { 
-            font-family: 'Arial Bold'; 
-            src: url('arialbd.ttf') format('truetype'); 
-            font-weight: bold; 
-        }
+        
+        /* Noto Sans TC (思源黑體，作為主要中文字體) */
         @font-face { 
             font-family: 'Noto Sans TC'; 
             src: url('NotoSansTC-Bold.ttf') format('truetype'); 
@@ -43,7 +43,7 @@
         }
         
         body { 
-            font-family: 'Plus Jakarta Sans', 'Arial', 'Noto Sans TC', sans-serif; 
+            font-family: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif; 
             background-color: #f8f9fa; 
             margin: 0; 
             padding: 0;
@@ -290,7 +290,7 @@
         }
 
         /* ==========================================================================
-           9. 開發日誌 Modal 視窗樣式
+           9. Modal 彈出視窗樣式 (通用於開發日誌與圖片預覽)
            ========================================================================== */
         .modal-overlay {
             display: none; 
@@ -299,20 +299,20 @@
             left: 0; 
             width: 100%; 
             height: 100%;
-            background: rgba(0, 0, 0, 0.5); 
+            background: rgba(0, 0, 0, 0.7); 
             z-index: 2000;
             justify-content: center; 
             align-items: center;
-            backdrop-filter: blur(3px);
+            backdrop-filter: blur(5px);
         }
         .modal-box {
             background: white; 
             width: 90%; 
             max-width: 600px; 
-            max-height: 80vh;
+            max-height: 85vh;
             border-radius: 12px; 
             padding: 25px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             overflow-y: auto; 
             position: relative;
             font-family: 'Noto Sans TC', sans-serif; 
@@ -340,7 +340,7 @@
         }
         .close-btn:hover { color: #333; }
         
-        /* 日誌內容排版 */
+        /* 日誌內容樣式 */
         .log-entry { margin-bottom: 20px; }
         .log-date { 
             font-size: 12px; 
@@ -366,6 +366,7 @@
         }
         .tag-feat { background: #20c997; } 
         .tag-init { background: #6c757d; } 
+        .tag-fix { background: #ffc107; color: #333; }
         
         .log-desc { 
             margin-top: 5px; 
@@ -379,55 +380,22 @@
         }
         .log-desc li { margin-bottom: 3px; }
 
-        /* ==========================================================================
-           10. ★★★ 手機版圖片預覽 Overlay 樣式 (V2.0 邏輯) ★★★
-           ========================================================================== */
-        .mobile-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.98);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            overflow-y: auto;
-            text-align: center;
-        }
-        .mobile-overlay img {
-            max-width: 100%;
-            max-height: 70vh;
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-        }
-        .mobile-overlay p {
-            color: #333;
-            font-size: 16px;
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }
-        .mobile-overlay .close-overlay {
-            padding: 12px 30px;
-            background: #0097D7;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,151,215,0.3);
+        /* 圖片預覽下載提示 */
+        .save-hint { 
+            text-align: center; 
+            padding: 10px; 
+            background: #e3f2fd; 
+            border-radius: 8px; 
+            color: #0d47a1; 
+            font-weight: bold; 
+            margin-bottom: 15px; 
         }
     </style>
 </head>
 <body>
 
     <div id="loading-overlay">
-        <div>系統載入中...<br><span style="font-size:12px;color:#999">Initialize...</span></div>
+        <div>系統載入中...<br><span style="font-size:12px;color:#999">Loading Fonts... (2 files)</span></div>
     </div>
 
     <nav class="navbar">
@@ -501,31 +469,33 @@
             <a href="https://www.jcidayuan.site/" target="_blank" class="footer-link-blue">桃園市大園國際青年商會</a> 製作
         </div>
         <div style="margin-top: 15px; font-size: 12px;">
-            <a href="javascript:void(0)" onclick="openModal()" style="color:#0097D7; text-decoration:none; border-bottom:1px dashed #0097D7; font-weight:bold;">
+            <a href="javascript:void(0)" onclick="openModal('devLog')" style="color:#0097D7; text-decoration:none; border-bottom:1px dashed #0097D7; font-weight:bold;">
                 📜 查看開發日誌 (Changelog)
             </a>
         </div>
     </div>
 
-    <div id="devLogModal" class="modal-overlay" onclick="closeModal(event)">
+    <div id="devLogModal" class="modal-overlay" onclick="closeModal(event, 'devLog')">
         <div class="modal-box">
             <div class="modal-header">
                 <div class="modal-title">🚀 開發演進日誌</div>
-                <button class="close-btn" onclick="closeModalBtn()">×</button>
+                <button class="close-btn" onclick="closeModalBtn('devLog')">×</button>
             </div>
             <div class="modal-content">
                 <div class="log-entry">
                     <span class="log-date">2026/01/15 - Present</span>
-                    <div class="log-ver"><span class="log-tag tag-feat">V3.0</span> 在地化與智慧排版</div>
+                    <div class="log-ver"><span class="log-tag tag-feat">V3.0</span> 完整功能發布</div>
                     <div class="log-desc">
-                        解決台灣分會特有的「中英並列」排版難題。
+                        專為台灣總會量身打造的在地化版本，集成了智慧排版、商用字體與行動裝置優化。
                         <ul>
                             <li><strong>🇹🇼 台灣總會版：</strong>實作獨有的雙行排版，並針對中英文採用獨立座標系統，確保像素級對齊。</li>
+                            <li><strong>📱 行動裝置支援：</strong>修復 LINE 與 Safari 內建瀏覽器的下載問題，新增圖片預覽彈窗。</li>
+                            <li><strong>⚖️ 合規性升級：</strong>全面採用 <strong>Plus Jakarta Sans</strong> 開源字體，確保 100% 版權安全。</li>
                             <li><strong>Smart Layout 引擎：</strong>開發紅線演算法，文字過長自動縮小，確保不超出盾牌邊界；並具備分散對齊功能。</li>
-                            <li><strong>字體優化：</strong>改用 Arial (英) 與 Noto Sans TC (中) 確保跨平台顯示一致且合法。</li>
                         </ul>
                     </div>
                 </div>
+                
                 <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
                 
                 <div class="log-entry">
@@ -539,6 +509,7 @@
                         </ul>
                     </div>
                 </div>
+                
                 <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
                 
                 <div class="log-entry">
@@ -556,6 +527,20 @@
                 <div style="margin-top:20px; text-align:center; color:#ccc; font-size:12px;">
                     Developed with ❤️ by JCI Dayuan
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="imagePreviewModal" class="modal-overlay" onclick="closeModal(event, 'imagePreview')">
+        <div class="modal-box" style="text-align:center;">
+            <div class="modal-header">
+                <div class="modal-title">圖片已建立</div>
+                <button class="close-btn" onclick="closeModalBtn('imagePreview')">×</button>
+            </div>
+            <div class="save-hint">👇 請「長按圖片」選擇儲存至相簿</div>
+            <img id="generatedImage" src="" style="max-width:100%; border-radius:8px; border:1px solid #ddd; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+            <div style="margin-top:15px;">
+                <button class="btn-base btn-png" onclick="closeModalBtn('imagePreview')">關閉視窗</button>
             </div>
         </div>
     </div>
@@ -592,30 +577,32 @@
                     sizePx: 56 
                 },
                 
-                defaultText1: "Dayuan,Taiwan",
-                defaultText2: "桃園市大園國際青年商會"
+                defaultText1: "Hsinchu,Taiwan",
+                defaultText2: "新竹市新竹國際青年商會"
             }
         };
 
         let currentMode = 'world'; 
-        let fontWorld = null; // Plus Jakarta Sans
-        let fontTwEn = null;  // Arial
+        let fontWorld = null; // Plus Jakarta Sans (取代 Arial)
         let fontTwCh = null;  // Noto Sans TC
         let svgForDownload = "";
 
         // ----------------------------------------
         // 2. Modal 視窗控制
         // ----------------------------------------
-        function openModal() { 
-            document.getElementById('devLogModal').style.display = 'flex'; 
+        function openModal(type) { 
+            const id = type === 'devLog' ? 'devLogModal' : 'imagePreviewModal';
+            document.getElementById(id).style.display = 'flex'; 
             document.body.style.overflow = 'hidden'; 
         }
-        function closeModalBtn() { 
-            document.getElementById('devLogModal').style.display = 'none'; 
+        function closeModalBtn(type) { 
+            const id = type === 'devLog' ? 'devLogModal' : 'imagePreviewModal';
+            document.getElementById(id).style.display = 'none'; 
             document.body.style.overflow = 'auto'; 
         }
-        function closeModal(e) { 
-            if (e.target.id === 'devLogModal') closeModalBtn(); 
+        function closeModal(e, type) { 
+            const id = type === 'devLog' ? 'devLogModal' : 'imagePreviewModal';
+            if (e.target.id === id) closeModalBtn(type); 
         }
 
         // ----------------------------------------
@@ -623,7 +610,7 @@
         // ----------------------------------------
         window.onload = function() {
             let loadedCount = 0; 
-            const totalFonts = 3; 
+            const totalFonts = 2; // 只需載入兩個合法字體
             const statusBox = document.querySelector('#loading-overlay div');
 
             const updateStatus = (fontName, success) => {
@@ -645,17 +632,13 @@
                 }
             };
 
-            // 載入字體檔案 (必須確保這三個檔案在目錄中)
+            // 1. Plus Jakarta Sans (World & Taiwan English)
             opentype.load('PlusJakartaSans-Bold.ttf', function(err, font) { 
                 if (err) updateStatus('PlusJakartaSans', false); 
                 else { fontWorld = font; updateStatus('PlusJakartaSans', true); }
             });
 
-            opentype.load('arialbd.ttf', function(err, font) { 
-                if (err) updateStatus('Arial', false); 
-                else { fontTwEn = font; updateStatus('Arial', true); }
-            });
-
+            // 2. Noto Sans TC (Taiwan Chinese)
             opentype.load('NotoSansTC-Bold.ttf', function(err, font) { 
                 if (err) updateStatus('NotoSansTC', false); 
                 else { fontTwCh = font; updateStatus('NotoSansTC', true); }
@@ -689,11 +672,12 @@
         // 5. 更新預覽 (Update Preview) - 核心繪圖邏輯
         // ----------------------------------------
         async function updatePreview() {
-            const fWorld = fontWorld || fontTwEn; 
-            const fTwEn = fontTwEn || fontWorld; 
-            const fTwCh = fontTwCh || fontWorld;
+            // 使用 Plus Jakarta Sans 作為世界版與台灣版的英文字體
+            const fWorld = fontWorld; 
+            const fTwEn = fontWorld; 
+            const fTwCh = fontTwCh;
 
-            if (!fWorld && !fTwEn) return;
+            if (!fWorld && !fTwCh) return;
             
             const parts = document.getElementById('logoSelect').value.split('|');
             const fileName = parts[0], bgToRemove = parts[1], colorType = parts[2], uiBgMode = parts[3];
@@ -818,13 +802,16 @@
         }
 
         // ----------------------------------------
-        // 7. 檔案下載邏輯 (V2.0 Logic - Mobile Overlay)
+        // 7. 檔案下載邏輯 (Fix for LINE/Safari)
         // ----------------------------------------
         async function downloadFile(type) {
             if (!svgForDownload) return;
             const name = "JCI_" + (document.getElementById('chapterInput1').value || "Logo").replace(/[^a-zA-Z0-9]/g, "_");
             const btn = document.querySelector('.btn-' + type), oldText = btn.innerText;
             btn.innerText = "處理中..."; btn.disabled = true;
+
+            // 判斷是否為手機 (包含 iOS/Android/LINE In-App)
+            const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
             try {
                 let svgProcessed = svgForDownload;
@@ -850,12 +837,10 @@
                     const blob = new Blob([svgProcessed], {type: "image/svg+xml;charset=utf-8"});
                     triggerDL(URL.createObjectURL(blob), name + ".svg");
                 } else {
-                    // PNG 轉檔下載
+                    // PNG 生成邏輯
                     const scale = parseInt(document.getElementById('sizeSelect').value);
                     const img = new Image();
                     const url = URL.createObjectURL(new Blob([svgProcessed], {type: "image/svg+xml;charset=utf-8"}));
-                    
-                    // 等待圖片載入
                     await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
 
                     const vbMatch = svgProcessed.match(/viewBox="([^"]+)"/);
@@ -867,20 +852,12 @@
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     URL.revokeObjectURL(url);
-                    
                     const pngData = canvas.toDataURL("image/png");
 
-                    // ★★★ 手機版 / LINE 內建瀏覽器邏輯 (V2.0 Mobile Overlay) ★★★
-                    if (/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                        const overlay = document.createElement('div');
-                        overlay.className = 'mobile-overlay';
-                        overlay.innerHTML = `
-                            <p style="font-weight:bold; color:#0097D7; font-size:18px;">圖片已生成！</p>
-                            <p>請「長按下方圖片」並選擇「儲存圖片」<br>(Long press image to save)</p>
-                            <img src="${pngData}">
-                            <button class="close-overlay" onclick="this.parentElement.remove()">完成並返回 (Close)</button>
-                        `;
-                        document.body.appendChild(overlay);
+                    if (isMobile) {
+                        // ★ LINE/Safari 修復：改為彈出 Modal 預覽，不開新視窗
+                        document.getElementById('generatedImage').src = pngData;
+                        openModal('imagePreview');
                     } else { 
                         // 電腦版直接下載
                         triggerDL(pngData, name + ".png"); 
@@ -895,11 +872,8 @@
         }
 
         function triggerDL(url, name) {
-            const a = document.createElement('a'); 
-            a.href = url; a.download = name; 
-            document.body.appendChild(a); 
-            a.click(); 
-            document.body.removeChild(a); 
+            const a = document.createElement('a'); a.href = url; a.download = name; 
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); 
             if(url.startsWith('blob:')) setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
     </script>
