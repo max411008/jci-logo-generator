@@ -10,18 +10,13 @@
         fill: #0c95d3;
       }
 
-      .cls-3 {
-        fill: #130f2d;
-      }
+      /* 移除了原本定義深藍色背景的 .cls-3 樣式 */
 
       .cls-4 {
         fill: #57bcbb;
       }
     </style>
   </defs>
-  <g id="Backgrounds">
-    <rect id="Navy_Background" data-name="Navy Background" class="cls-3" x="0" y="0" width="867.4" height="867.4"/>
-  </g>
   <g id="Logo_Centered" data-name="Logo Centered">
     <g>
       <g>
