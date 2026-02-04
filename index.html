@@ -20,18 +20,12 @@
     <style>
         /* ==========================================================================
            1. 字體定義 (Fonts)
-           使用開源字體 Plus Jakarta Sans 與 Noto Sans TC
+           使用開源字體 Plus Jakarta Sans 與 Noto Sans TC，確保版權合法
            (已改為 CDN 連結，確保預覽與本機皆可使用)
            ========================================================================== */
         @font-face { 
             font-family: 'Plus Jakarta Sans'; 
             src: url('https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff') format('woff');
-            font-weight: bold; 
-        }
-        @font-face { 
-            font-family: 'Arial Bold'; 
-            /* Arial 為系統字體，若無則使用 CDN 模擬 */
-            src: local('Arial Bold'), local('Arial-Bold'), url('https://cdn.jsdelivr.net/npm/@fontsource/arimo/files/arimo-latin-700-normal.woff') format('woff');
             font-weight: bold; 
         }
         @font-face { 
@@ -300,7 +294,7 @@
         }
         .footer-link-blue:hover {
             color: #007bb5;
-            border-bottom: 1px solid #007bb5;
+            border-bottom: 2px solid #007bb5;
         }
         .footer-disclaimer {
             margin-top: 12px;
