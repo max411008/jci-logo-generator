@@ -21,20 +21,24 @@
         /* ==========================================================================
            1. 字體定義 (Fonts)
            使用開源字體 Plus Jakarta Sans 與 Noto Sans TC，確保版權合法
+           (CDN 備援機制，確保無檔案時也能預覽)
            ========================================================================== */
         @font-face { 
             font-family: 'Plus Jakarta Sans'; 
-            src: url('https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff') format('woff');
+            src: url('PlusJakartaSans-Bold.ttf') format('truetype'),
+                 url('https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff') format('woff');
             font-weight: bold; 
         }
         @font-face { 
             font-family: 'Arial Bold'; 
-            src: url('arialbd.ttf') format('truetype'); 
+            /* Arial 為系統字體，若無則使用 CDN 模擬 */
+            src: local('Arial Bold'), local('Arial-Bold'), url('https://cdn.jsdelivr.net/npm/@fontsource/arimo/files/arimo-latin-700-normal.woff') format('woff');
             font-weight: bold; 
         }
         @font-face { 
             font-family: 'Noto Sans TC'; 
-            src: url('https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-tc/files/noto-sans-tc-chinese-traditional-700-normal.woff') format('woff');
+            src: url('NotoSansTC-Bold.ttf') format('truetype'),
+                 url('https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-tc/files/noto-sans-tc-chinese-traditional-700-normal.woff') format('woff');
             font-weight: bold; 
         }
         
@@ -498,7 +502,7 @@
                         
                         <!-- ★ 修正：區分「保留黑底」與「去背」兩個選項 -->
                         <option value="New JCI Logo (SVG)_Secondary - Inverted Color on JCI Black.svg|none|white|transparent">Inverted (黑底白字)</option>
-                        <!-- ★ 為了讓預覽能看出是去背白字，uiBgMode 設為 #444 (深灰)，下載時會去背 -->
+                        <!-- ★ 去背白字：預覽用深灰 (#444) 模擬透明，下載時會移除黑色背景 -->
                         <option value="New JCI Logo (SVG)_Secondary - Inverted Color on JCI Black.svg|#1c1f2a|white|#444444">Inverted (去背白字藍盾)</option>
                         
                         <option value="New JCI Logo (SVG)_Secondary - JCI Black.svg|none|pure-black|transparent">Black Text (全黑)</option>
@@ -990,7 +994,7 @@
                         if(['path', 'rect', 'circle', 'polygon', 'text'].includes(s.tagName)) {
                             if (comp.fill && comp.fill !== 'none') c.setAttribute('fill', comp.fill);
                             if (comp.stroke && comp.stroke !== 'none') c.setAttribute('stroke', comp.stroke);
-                            c.removeAttribute('class'); // 移除 class 避免混淆
+                            c.removeAttribute('class'); 
                         }
                     }
                     svgProcessed = new XMLSerializer().serializeToString(cloneSVG);
