@@ -21,11 +21,15 @@
         /* ==========================================================================
            1. 字體定義 (Fonts)
            使用開源字體 Plus Jakarta Sans 與 Noto Sans TC，確保版權合法
-           (已改為 CDN 連結，確保預覽與本機皆可使用)
            ========================================================================== */
         @font-face { 
             font-family: 'Plus Jakarta Sans'; 
             src: url('https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff') format('woff');
+            font-weight: bold; 
+        }
+        @font-face { 
+            font-family: 'Arial Bold'; 
+            src: url('arialbd.ttf') format('truetype'); 
             font-weight: bold; 
         }
         @font-face { 
@@ -492,9 +496,10 @@
                         <option value="New JCI Logo (SVG)_Secondary - White on JCI Blue.svg|none|white|transparent">Blue Background (藍底白字)</option>
                         <option value="New JCI Logo (SVG).svg|#1c1f2a|white|jci-black">Dark Background (去背全白)</option>
                         
-                        <!-- ★ 選項修正：分為「保留黑底」與「去背白字」 -->
+                        <!-- ★ 修正：區分「保留黑底」與「去背」兩個選項 -->
                         <option value="New JCI Logo (SVG)_Secondary - Inverted Color on JCI Black.svg|none|white|transparent">Inverted (黑底白字)</option>
-                        <option value="New JCI Logo (SVG)_Secondary - Inverted Color on JCI Black.svg|#1c1f2a|white|jci-black">Inverted (去背白字藍盾)</option>
+                        <!-- ★ 為了讓預覽能看出是去背白字，uiBgMode 設為 #444 (深灰)，下載時會去背 -->
+                        <option value="New JCI Logo (SVG)_Secondary - Inverted Color on JCI Black.svg|#1c1f2a|white|#444444">Inverted (去背白字藍盾)</option>
                         
                         <option value="New JCI Logo (SVG)_Secondary - JCI Black.svg|none|pure-black|transparent">Black Text (全黑)</option>
                     </select>
@@ -797,7 +802,14 @@
             const parts = document.getElementById('logoSelect').value.split('|');
             const fileName = parts[0], bgToRemove = parts[1], colorType = parts[2], uiBgMode = parts[3];
 
-            document.getElementById('previewContainer').style.backgroundColor = (uiBgMode === 'jci-black') ? '#1C1F2A' : 'transparent';
+            // 處理預覽區背景色
+            // 如果 uiBgMode 是 hex code (例如 #444444)，就直接使用；如果是 class name 則需轉換
+            let containerBg = 'transparent';
+            if (uiBgMode === 'jci-black') containerBg = '#1C1F2A';
+            else if (uiBgMode !== 'transparent') containerBg = uiBgMode;
+
+            document.getElementById('previewContainer').style.backgroundColor = containerBg;
+            
             const colors = { 'jci-blue': '#0097D7', 'white': '#FFFFFF', 'black': '#1C1F2A', 'pure-black': '#000000' };
             const textColor = colors[colorType] || '#0097D7';
 
@@ -825,6 +837,7 @@
                 // 移除不需要的背景 (Preview)
                 svgEl.querySelectorAll('path, rect, polygon, circle').forEach(el => {
                     const fill = el.getAttribute('fill');
+                    // ★ 關鍵修正：移除了防止 "Inverted" 去背的卡控邏輯
                     if (fill && fill.toLowerCase() === bgToRemove.toLowerCase()) { 
                          el.style.display = 'none'; 
                     }
@@ -977,7 +990,7 @@
                         if(['path', 'rect', 'circle', 'polygon', 'text'].includes(s.tagName)) {
                             if (comp.fill && comp.fill !== 'none') c.setAttribute('fill', comp.fill);
                             if (comp.stroke && comp.stroke !== 'none') c.setAttribute('stroke', comp.stroke);
-                            c.removeAttribute('class'); 
+                            c.removeAttribute('class'); // 移除 class 避免混淆
                         }
                     }
                     svgProcessed = new XMLSerializer().serializeToString(cloneSVG);
