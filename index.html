@@ -5,33 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>JCI Logo Generator v3.1</title>
     
+    <!-- 系統錯誤捕捉 -->
     <script>
         window.onerror = function(msg, url, line) {
+            // 忽略 ResizeObserver 的良性錯誤
             if (msg.indexOf('ResizeObserver') !== -1) return;
             console.log('系統訊息: ' + msg);
         };
     </script>
 
+    <!-- 載入 opentype.js 核心庫 -->
     <script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
 
     <style>
         /* ==========================================================================
            1. 字體定義 (Fonts)
-           僅使用開源字體 Plus Jakarta Sans 與 Noto Sans TC，100% 版權合法
+           使用開源字體 Plus Jakarta Sans 與 Noto Sans TC
+           (已改為 CDN 連結，確保預覽與本機皆可使用)
            ========================================================================== */
         @font-face { 
             font-family: 'Plus Jakarta Sans'; 
-            src: url('PlusJakartaSans-Bold.ttf') format('truetype'); 
+            src: url('https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff') format('woff');
+            font-weight: bold; 
+        }
+        @font-face { 
+            font-family: 'Arial Bold'; 
+            /* Arial 為系統字體，若無則使用 CDN 模擬 */
+            src: local('Arial Bold'), local('Arial-Bold'), url('https://cdn.jsdelivr.net/npm/@fontsource/arimo/files/arimo-latin-700-normal.woff') format('woff');
             font-weight: bold; 
         }
         @font-face { 
             font-family: 'Noto Sans TC'; 
-            src: url('NotoSansTC-Bold.ttf') format('truetype'); 
+            src: url('https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-tc/files/noto-sans-tc-chinese-traditional-700-normal.woff') format('woff');
             font-weight: bold; 
         }
         
         /* ==========================================================================
-           2. 全域基礎樣式
+           2. 全域基礎樣式 (Global Styles)
            ========================================================================== */
         * { 
             box-sizing: border-box; 
@@ -51,7 +61,7 @@
         }
 
         /* ==========================================================================
-           3. 導覽列
+           3. 導覽列 (Navbar)
            ========================================================================== */
         .navbar {
             width: 100%; 
@@ -78,7 +88,7 @@
         }
 
         /* ==========================================================================
-           4. 載入畫面
+           4. 載入畫面 (Loading Overlay)
            ========================================================================== */
         #loading-overlay {
             position: fixed; 
@@ -97,7 +107,7 @@
         }
 
         /* ==========================================================================
-           5. 控制面板區塊
+           5. 控制面板區塊 (Controls)
            ========================================================================== */
         .controls { 
             background: white; 
@@ -184,7 +194,7 @@
         }
         
         /* ==========================================================================
-           6. 按鈕樣式
+           6. 按鈕樣式 (Buttons)
            ========================================================================== */
         .btn-group-vertical { 
             display: flex; 
@@ -222,7 +232,7 @@
         }
 
         /* ==========================================================================
-           7. 預覽區樣式
+           7. 預覽區樣式 (Preview Area)
            ========================================================================== */
         .preview-wrapper {
             width: 100%; 
@@ -266,7 +276,7 @@
         }
 
         /* ==========================================================================
-           8. Footer 樣式 (點點超連結)
+           8. Footer 樣式 (連結樣式優化 - 點點線)
            ========================================================================== */
         .footer { 
             margin-top: auto; 
@@ -283,13 +293,14 @@
             color: #0097D7; 
             text-decoration: none; 
             font-weight: bold;
-            border-bottom: 2px dotted #0097D7; 
-            padding-bottom: 2px;
+            /* 明顯的虛線底線 */
+            border-bottom: 1px dashed #0097D7; 
+            padding-bottom: 1px;
             transition: all 0.2s;
         }
         .footer-link-blue:hover {
             color: #007bb5;
-            border-bottom: 2px solid #007bb5;
+            border-bottom: 1px solid #007bb5;
         }
         .footer-disclaimer {
             margin-top: 12px;
@@ -301,7 +312,7 @@
         }
 
         /* ==========================================================================
-           9. Modal 彈出視窗樣式
+           9. Modal 彈出視窗樣式 (通用於開發日誌與圖片預覽)
            ========================================================================== */
         .modal-overlay {
             display: none; 
@@ -403,7 +414,7 @@
         }
         
         /* ==========================================================================
-           10. 手機版 Overlay 樣式
+           10. 手機版 Overlay 樣式 (V2.0 邏輯)
            ========================================================================== */
         .mobile-overlay {
             position: fixed;
@@ -449,15 +460,18 @@
 </head>
 <body>
 
+    <!-- 載入畫面 Overlay -->
     <div id="loading-overlay">
         <div>系統載入中...<br><span style="font-size:12px;color:#999">Loading Fonts... (2 files)</span></div>
     </div>
 
+    <!-- 頁面導覽列 -->
     <nav class="navbar">
         <span class="nav-main">JCI Logo Generator v3.1</span>
         <span class="nav-sub">Official & Safe Font Edition</span>
     </nav>
 
+    <!-- 主要操作區 -->
     <div class="controls">
         <div class="mode-switch-container">
             <div id="mode-world" class="mode-btn active" onclick="switchMode('world')">🌍 世界總會版 (World)</div>
@@ -473,7 +487,7 @@
             
             <div class="input-group">
                 <label id="label-line2">分會名稱 (Line 2, 選填)</label>
-                <input type="text" id="chapterInput2" value="桃園市大園國際青年商會" placeholder="(選填)" oninput="updatePreview()">
+                <input type="text" id="chapterInput2" value="大園國際青年商會" placeholder="(選填)" oninput="updatePreview()">
             </div>
 
             <div style="display:flex; gap:10px;">
@@ -483,7 +497,11 @@
                         <option value="New JCI Logo (SVG)_Primary.svg|none|jci-blue|transparent">Primary (白底藍字)</option>
                         <option value="New JCI Logo (SVG)_Secondary - White on JCI Blue.svg|none|white|transparent">Blue Background (藍底白字)</option>
                         <option value="New JCI Logo (SVG).svg|#1c1f2a|white|jci-black">Dark Background (去背全白)</option>
-                        <option value="New JCI Logo (SVG)_Secondary - Inverted Color on JCI Black.svg|#1c1f2a|white|transparent">Inverted (黑底白字)</option>
+                        
+                        <!-- ★ 選項修正：分為「保留黑底」與「去背白字」 -->
+                        <option value="New JCI Logo (SVG)_Secondary - Inverted Color on JCI Black.svg|none|white|transparent">Inverted (黑底白字)</option>
+                        <option value="New JCI Logo (SVG)_Secondary - Inverted Color on JCI Black.svg|#1c1f2a|white|jci-black">Inverted (去背白字藍盾)</option>
+                        
                         <option value="New JCI Logo (SVG)_Secondary - JCI Black.svg|none|pure-black|transparent">Black Text (全黑)</option>
                     </select>
                 </div>
@@ -506,6 +524,7 @@
         </div>
     </div>
 
+    <!-- 圖片預覽區 -->
     <div class="preview-wrapper">
         <div class="preview-label">▼ 預覽區 (Preview Area) ▼</div>
         <div class="preview-container" id="previewContainer">
@@ -513,14 +532,17 @@
         </div>
     </div>
 
+    <!-- 頁尾 (包含作者連結與開發日誌) -->
     <div class="footer">
         <div class="footer-block">
             Designed & Developed by 
+            <!-- ★★★ Personal Link ★★★ -->
             <a href="https://www.facebook.com/zhenhui.lin/" target="_blank" class="footer-link-blue">Chenghui Lin</a>
             <br>
             (2023 President, <a href="https://www.jcidayuan.site/" target="_blank" class="footer-link-blue">JCI Dayuan</a>)
         </div>
         
+        <!-- 版權與免責聲明 -->
         <div class="footer-disclaimer">
             Copyright © 2026 Chenghui Lin. All rights reserved.<br>
             本工具由個人開發免費供會友使用，嚴禁盜用程式碼並宣稱為自身作品
@@ -533,6 +555,7 @@
         </div>
     </div>
 
+    <!-- 1. 開發日誌彈出視窗 (Modal) -->
     <div id="devLogModal" class="modal-overlay" onclick="closeModal(event, 'devLog')">
         <div class="modal-box">
             <div class="modal-header">
@@ -541,11 +564,12 @@
             </div>
             <div class="modal-content">
                 
+                <!-- V3.1 (Latest) -->
                 <div class="log-entry">
                     <span class="log-date">2026/01/23 - Present</span>
-                    <div class="log-ver"><span class="log-tag tag-fix">V3.1</span> CS6 相容性修正</div>
+                    <div class="log-ver"><span class="log-tag tag-fix">V3.1</span> CS6 相容與終極優化</div>
                     <div class="log-desc">
-                        針對設計軟體 (AI CS6) 讀取問題的深度優化版本。
+                        針對設計軟體 (AI CS6) 讀取問題與介面細節的深度優化版本。
                         <ul>
                             <li><strong>🎨 解決 AI CS6 全黑問題：</strong>導入「樣式烘焙 (Style Baking)」技術。下載 SVG 前，強制讀取所有 CSS 顏色並寫入標籤屬性 (fill/stroke)，徹底解決舊版 Illustrator 開啟時顏色消失的問題。</li>
                         </ul>
@@ -554,6 +578,7 @@
 
                 <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
 
+                <!-- V3.0 -->
                 <div class="log-entry">
                     <span class="log-date">2026/01/15</span>
                     <div class="log-ver"><span class="log-tag tag-feat">V3.0</span> 完整功能發布</div>
@@ -570,6 +595,7 @@
                 
                 <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
                 
+                <!-- V2.0 -->
                 <div class="log-entry">
                     <span class="log-date">2026/01/08</span>
                     <div class="log-ver"><span class="log-tag tag-feat">V2.0</span> 向量革命</div>
@@ -584,6 +610,7 @@
                 
                 <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
                 
+                <!-- V1.0 -->
                 <div class="log-entry">
                     <span class="log-date">2025/12/04</span>
                     <div class="log-ver"><span class="log-tag tag-init">V1.0</span> 原型誕生</div>
@@ -603,6 +630,7 @@
         </div>
     </div>
 
+    <!-- 2. 圖片下載預覽 Modal (解決 LINE/Safari 無法下載的解決方案) -->
     <div id="imagePreviewModal" class="modal-overlay" onclick="closeModal(event, 'imagePreview')">
         <div class="modal-box" style="text-align:center;">
             <div class="modal-header">
@@ -617,6 +645,9 @@
         </div>
     </div>
 
+    <!-- ==========================================
+       JAVASCRIPT 核心邏輯
+       ========================================== -->
     <script>
         // ----------------------------------------
         // 1. CONFIG 設定檔 (V3.1 Final)
@@ -650,13 +681,13 @@
                 },
                 
                 defaultText1: "Dayuan,Taiwan",
-                defaultText2: "桃園市大園國際青年商會"
+                defaultText2: "大園國際青年商會"
             }
         };
 
         let currentMode = 'world'; 
-        let fontWorld = null; // Plus Jakarta Sans (World & Taiwan English)
-        let fontTwCh = null;  // Noto Sans TC (Taiwan Chinese)
+        let fontWorld = null; // Plus Jakarta Sans (取代 Arial)
+        let fontTwCh = null;  // Noto Sans TC
         let svgForDownload = "";
 
         // ----------------------------------------
@@ -678,11 +709,11 @@
         }
 
         // ----------------------------------------
-        // 3. 初始化與字體載入 (Window Onload)
+        // 3. 初始化與字體載入 (使用 CDN 備援機制)
         // ----------------------------------------
         window.onload = function() {
             let loadedCount = 0; 
-            const totalFonts = 2; // 只需載入兩個合法字體
+            const totalFonts = 2; // PlusJakartaSans + NotoSansTC
             const statusBox = document.querySelector('#loading-overlay div');
 
             const updateStatus = (fontName, success) => {
@@ -704,15 +735,33 @@
                 }
             };
 
-            // 1. Plus Jakarta Sans (World & Taiwan English)
-            opentype.load('PlusJakartaSans-Bold.ttf', function(err, font) { 
-                if (err) updateStatus('PlusJakartaSans', false); 
+            // 1. Plus Jakarta Sans
+            const pjsUrl1 = 'PlusJakartaSans-Bold.ttf';
+            const pjsUrl2 = 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff';
+            
+            opentype.load(pjsUrl1, function(err, font) { 
+                if (err) {
+                    // 本地失敗，嘗試 CDN
+                    opentype.load(pjsUrl2, function(err2, font2) {
+                        if(err2) updateStatus('PlusJakartaSans', false);
+                        else { fontWorld = font2; updateStatus('PlusJakartaSans (CDN)', true); }
+                    });
+                }
                 else { fontWorld = font; updateStatus('PlusJakartaSans', true); }
             });
 
-            // 2. Noto Sans TC (Taiwan Chinese)
-            opentype.load('NotoSansTC-Bold.ttf', function(err, font) { 
-                if (err) updateStatus('NotoSansTC', false); 
+            // 2. Noto Sans TC
+            const notoUrl1 = 'NotoSansTC-Bold.ttf';
+            const notoUrl2 = 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-tc/files/noto-sans-tc-chinese-traditional-700-normal.woff';
+            
+            opentype.load(notoUrl1, function(err, font) { 
+                if (err) {
+                    // 本地失敗，嘗試 CDN
+                    opentype.load(notoUrl2, function(err2, font2) {
+                        if(err2) updateStatus('NotoSansTC', false);
+                        else { fontTwCh = font2; updateStatus('NotoSansTC (CDN)', true); }
+                    });
+                } 
                 else { fontTwCh = font; updateStatus('NotoSansTC', true); }
             });
         };
@@ -759,18 +808,31 @@
             const textColor = colors[colorType] || '#0097D7';
 
             try {
-                const resp = await fetch(fileName);
-                if (!resp.ok) throw new Error("SVG 載入失敗");
-                const rawSvg = await resp.text();
+                // 如果預覽時找不到檔案，會導致 Promise reject
+                // 這裡嘗試加強容錯，若在無檔案環境則產生替代 SVG
+                let rawSvg;
+                try {
+                    const resp = await fetch(fileName);
+                    if (!resp.ok) throw new Error("File not found");
+                    rawSvg = await resp.text();
+                } catch(e) {
+                    // 生成一個假的盾牌做預覽，讓使用者可以繼續開發排版
+                    rawSvg = `<svg viewBox="0 0 1000 665" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0" y="0" width="1000" height="665" fill="none" />
+                        <rect x="10" y="10" width="108" height="135" fill="#ccc" rx="10" />
+                        <text x="64" y="85" text-anchor="middle" fill="#999" font-size="20">LOGO</text>
+                    </svg>`;
+                }
 
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(rawSvg, "image/svg+xml");
                 const svgEl = doc.documentElement;
 
+                // 移除不需要的背景 (Preview)
                 svgEl.querySelectorAll('path, rect, polygon, circle').forEach(el => {
                     const fill = el.getAttribute('fill');
                     if (fill && fill.toLowerCase() === bgToRemove.toLowerCase()) { 
-                        if (!(fileName.includes("Inverted") && bgToRemove === '#1c1f2a')) el.style.display = 'none'; 
+                         el.style.display = 'none'; 
                     }
                     if (uiBgMode === 'jci-black' && fill && fill.toLowerCase() === '#1c1f2a') el.style.display = 'none';
                 });
@@ -789,7 +851,6 @@
                 const g = doc.createElementNS("http://www.w3.org/2000/svg", "g");
 
                 if (currentMode === 'world') {
-                    // 世界版繪圖
                     const p1 = createStandardPath(t1, settings.line1, fWorld, width, height, scaleFactor, textColor);
                     const p2 = createStandardPath(t2, settings.line2, fWorld, width, height, scaleFactor, textColor);
                     g.innerHTML = p1 + p2;
@@ -799,7 +860,6 @@
                         document.getElementById('lengthWarning').style.display = (w1 > width * 0.55) ? 'block' : 'none';
                     }
                 } else {
-                    // 台灣版繪圖 (獨立座標 + Smart Fit)
                     document.getElementById('lengthWarning').style.display = 'none';
                     
                     const l1Start = width * (settings.line1.startX / 100);
@@ -824,7 +884,7 @@
         }
 
         // ----------------------------------------
-        // 6. 字體路徑產生器 (Path Generators)
+        // 6. Path Generators
         // ----------------------------------------
         function createStandardPath(text, config, font, width, height, scale, color) {
             if (!text || !font) return "";
@@ -842,12 +902,10 @@
             let finalSpacing = 0;
 
             if (rawWidth < targetWidth) {
-                // 分散對齊邏輯 (Dispersion)
                 const gap = targetWidth - rawWidth;
                 const charCount = text.length;
                 if (charCount > 1) { finalSpacing = gap / (charCount - 1); }
             } else {
-                // 自動縮放邏輯 (Auto Scale)
                 const ratio = targetWidth / rawWidth;
                 finalFontSize = stdFontSize * ratio;
             }
@@ -874,7 +932,7 @@
         }
 
         // ----------------------------------------
-        // 7. 檔案下載邏輯 (Fix for LINE/Safari + AI CS6 Style Baking)
+        // 7. 下載邏輯 (Fix for LINE/Safari + AI CS6 Style Baking)
         // ----------------------------------------
         async function downloadFile(type) {
             if (!svgForDownload) return;
@@ -882,11 +940,10 @@
             const btn = document.querySelector('.btn-' + type), oldText = btn.innerText;
             btn.innerText = "處理中..."; btn.disabled = true;
 
-            // 判斷是否為手機 (包含 iOS/Android/LINE In-App)
             const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
             try {
-                // ★ 1. 處理 PNG 透明背景 (移除預覽區的背景色塊)
+                // 1. PNG 透明背景處理
                 let svgProcessed = svgForDownload;
                 const parts = document.getElementById('logoSelect').value.split('|');
                 const bgToRemove = parts[1];
@@ -901,29 +958,38 @@
                 }
 
                 // ★ 2. AI CS6 核心相容技術：Style Baking (樣式烘焙)
-                // 必須使用真正的 DOM 元素來計算樣式，因為 CS6 讀不懂 CSS class
+                // 從預覽 DOM 中抓取計算後的樣式 (Computed Style)，並強制寫入 SVG 屬性
                 const sourceSVG = document.querySelector('#svg-preview-box svg');
-                const cloneSVG = sourceSVG.cloneNode(true);
-                const sourceEls = sourceSVG.querySelectorAll('*');
-                const cloneEls = cloneSVG.querySelectorAll('*');
-
-                // 遍歷所有元素，將計算後的樣式 (Computed Style) 強制寫入屬性
-                for (let i = 0; i < sourceEls.length; i++) {
-                    const s = sourceEls[i];
-                    const c = cloneEls[i];
-                    // 只有圖形元素才需要處理
-                    if(s.tagName === 'path' || s.tagName === 'rect' || s.tagName === 'circle' || s.tagName === 'polygon') {
-                        const comp = window.getComputedStyle(s);
-                        if (comp.fill && comp.fill !== 'none') c.setAttribute('fill', comp.fill);
-                        if (comp.stroke && comp.stroke !== 'none') c.setAttribute('stroke', comp.stroke);
-                        c.removeAttribute('class'); // 移除 class 避免混淆
-                    }
-                }
                 
-                // 重新序列化已經「烘焙」過顏色的 SVG
-                svgProcessed = new XMLSerializer().serializeToString(cloneSVG);
+                // 只有在預覽成功的情況下才執行 Style Baking
+                if (sourceSVG) {
+                    const cloneSVG = sourceSVG.cloneNode(true);
+                    const sourceEls = sourceSVG.querySelectorAll('*');
+                    const cloneEls = cloneSVG.querySelectorAll('*');
 
-                // ★ 3. 補上標準 XML 檔頭 (AI CS6 需要)
+                    // 遍歷所有元素
+                    for (let i = 0; i < sourceEls.length; i++) {
+                        const s = sourceEls[i];
+                        const c = cloneEls[i];
+                        
+                        // 移除 display: none 的元素 (確保 AI 不會顯示它們)
+                        const comp = window.getComputedStyle(s);
+                        if (comp.display === 'none') {
+                            c.remove();
+                            continue;
+                        }
+
+                        // 針對圖形元素將 CSS fill/stroke 轉為屬性
+                        if(['path', 'rect', 'circle', 'polygon', 'text'].includes(s.tagName)) {
+                            if (comp.fill && comp.fill !== 'none') c.setAttribute('fill', comp.fill);
+                            if (comp.stroke && comp.stroke !== 'none') c.setAttribute('stroke', comp.stroke);
+                            c.removeAttribute('class'); 
+                        }
+                    }
+                    svgProcessed = new XMLSerializer().serializeToString(cloneSVG);
+                }
+
+                // ★ 3. 補上標準 XML 檔頭 (AI CS6 必備)
                 if (!svgProcessed.includes('<?xml')) {
                     svgProcessed = '<?xml version="1.0" encoding="utf-8"?>\n' + 
                                    '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' + 
@@ -940,11 +1006,10 @@
                     const blob = new Blob([svgProcessed], {type: "image/svg+xml;charset=utf-8"});
                     triggerDL(URL.createObjectURL(blob), name + ".svg");
                 } else {
-                    // PNG 生成邏輯
+                    // PNG 生成
                     const scale = parseInt(document.getElementById('sizeSelect').value);
                     const img = new Image();
                     
-                    // Canvas 讀取需要重新建立 Blob URL
                     const url = URL.createObjectURL(new Blob([svgProcessed], {type: "image/svg+xml;charset=utf-8"}));
                     
                     await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
@@ -961,7 +1026,7 @@
                     const pngData = canvas.toDataURL("image/png");
 
                     if (isMobile) {
-                        // ★ LINE/Safari 修復：改為彈出 Modal 預覽，不開新視窗
+                        // LINE/Safari: 彈出 Modal 預覽
                         const overlay = document.createElement('div');
                         overlay.className = 'mobile-overlay';
                         overlay.innerHTML = `
