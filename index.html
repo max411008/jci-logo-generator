@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JCI Logo Generator v3.1</title>
+    <title>JCI Logo Generator v3.2</title>
     
     <!-- 系統錯誤捕捉 -->
     <script>
@@ -469,7 +469,7 @@
 
     <!-- 頁面導覽列 -->
     <nav class="navbar">
-        <span class="nav-main">JCI Logo Generator v3.1</span>
+        <span class="nav-main">JCI Logo Generator v3.2</span>
         <span class="nav-sub">Official & Safe Font Edition</span>
     </nav>
 
@@ -500,10 +500,11 @@
                         <option value="New JCI Logo (SVG)_Secondary - White on JCI Blue.svg|none|white|transparent">Blue Background (藍底白字)</option>
                         <option value="New JCI Logo (SVG).svg|#1c1f2a|white|jci-black">Dark Background (去背全白)</option>
                         
-                        <!-- ★ 修正：區分「保留黑底」與「去背」兩個選項 -->
+                        <!-- 保留黑底 -->
                         <option value="New JCI Logo (SVG)_Secondary - Inverted Color on JCI Black.svg|none|white|transparent">Inverted (黑底白字)</option>
-                        <!-- ★ 去背白字：預覽用深灰 (#444) 模擬透明，下載時會移除黑色背景 -->
-                        <option value="New JCI Logo (SVG)_Secondary - Inverted Color on JCI Black.svg|#1c1f2a|white|#444444">Inverted (去背白字藍盾)</option>
+                        
+                        <!-- ★ 更新：去背白字藍盾 (使用您提供的專用檔案) -->
+                        <option value="New JCI Logo (SVG)_Secondary - Inverted Color.svg|none|white|#444444">Inverted (去背白字藍盾)</option>
                         
                         <option value="New JCI Logo (SVG)_Secondary - JCI Black.svg|none|pure-black|transparent">Black Text (全黑)</option>
                     </select>
@@ -567,9 +568,20 @@
             </div>
             <div class="modal-content">
                 
-                <!-- V3.1 (Latest) -->
+                <!-- V3.2 (New) -->
                 <div class="log-entry">
-                    <span class="log-date">2026/01/23 - Present</span>
+                    <span class="log-date">2026/02/04</span>
+                    <div class="log-ver"><span class="log-tag tag-feat">V3.2</span> 去背資源優化</div>
+                    <div class="log-desc">
+                        針對「去背白字藍盾」樣式，改採專用的預處理 SVG 檔案，確保去背效果完美無瑕，並解決部分瀏覽器程式運算去背時的邊緣瑕疵。
+                    </div>
+                </div>
+
+                <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+
+                <!-- V3.1 -->
+                <div class="log-entry">
+                    <span class="log-date">2026/01/23</span>
                     <div class="log-ver"><span class="log-tag tag-fix">V3.1</span> CS6 相容與終極優化</div>
                     <div class="log-desc">
                         針對設計軟體 (AI CS6) 讀取問題與介面細節的深度優化版本。
@@ -653,7 +665,7 @@
        ========================================== -->
     <script>
         // ----------------------------------------
-        // 1. CONFIG 設定檔 (V3.1 Final)
+        // 1. CONFIG 設定檔 (V3.2 Final)
         // ----------------------------------------
         const CONFIG = {
             baseWidth: 1000,
@@ -994,7 +1006,7 @@
                         if(['path', 'rect', 'circle', 'polygon', 'text'].includes(s.tagName)) {
                             if (comp.fill && comp.fill !== 'none') c.setAttribute('fill', comp.fill);
                             if (comp.stroke && comp.stroke !== 'none') c.setAttribute('stroke', comp.stroke);
-                            c.removeAttribute('class'); 
+                            c.removeAttribute('class'); // 移除 class 避免混淆
                         }
                     }
                     svgProcessed = new XMLSerializer().serializeToString(cloneSVG);
