@@ -23,26 +23,23 @@
            使用開源字體 Plus Jakarta Sans 與 Noto Sans TC，確保版權合法
            (CDN 備援機制，確保無檔案時也能預覽)
            ========================================================================== */
-        @font-face {
-            font-family: 'Plus Jakarta Sans';
+        @font-face { 
+            font-family: 'Plus Jakarta Sans'; 
             src: url('PlusJakartaSans-Bold.ttf') format('truetype'),
                  url('https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff') format('woff');
-            font-weight: bold;
-            font-display: swap;
+            font-weight: bold; 
         }
-        @font-face {
-            font-family: 'Arial Bold';
+        @font-face { 
+            font-family: 'Arial Bold'; 
             /* Arial 為系統字體，若無則使用 CDN 模擬 */
             src: local('Arial Bold'), local('Arial-Bold'), url('https://cdn.jsdelivr.net/npm/@fontsource/arimo/files/arimo-latin-700-normal.woff') format('woff');
-            font-weight: bold;
-            font-display: swap;
+            font-weight: bold; 
         }
-        @font-face {
-            font-family: 'Noto Sans TC';
+        @font-face { 
+            font-family: 'Noto Sans TC'; 
             src: url('NotoSansTC-Bold.ttf') format('truetype'),
                  url('https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-tc/files/noto-sans-tc-chinese-traditional-700-normal.woff') format('woff');
-            font-weight: bold;
-            font-display: swap;
+            font-weight: bold; 
         }
         
         /* ==========================================================================
@@ -730,90 +727,58 @@
         // 3. 初始化與字體載入 (使用 CDN 備援機制)
         // ----------------------------------------
         window.onload = function() {
-            let loadedCount = 0;
-            let finished = false;
+            let loadedCount = 0; 
             const totalFonts = 2; // PlusJakartaSans + NotoSansTC
             const statusBox = document.querySelector('#loading-overlay div');
-            const finishedFor = { PlusJakartaSans: false, NotoSansTC: false };
-
-            const finishLoading = () => {
-                if (finished) return;
-                finished = true;
-                setTimeout(() => {
-                    const overlay = document.getElementById('loading-overlay');
-                    if (overlay) overlay.style.display = 'none';
-                    switchMode('world');
-                }, 300);
-            };
 
             const updateStatus = (fontName, success) => {
-                const baseName = fontName.replace(' (CDN)', '').replace(' (timeout)', '');
-                if (finishedFor[baseName]) return; // 同一個字體只計數一次
-                finishedFor[baseName] = true;
                 loadedCount++;
-                const icon = success ? '✅' : '⚠️';
+                const icon = success ? '✅' : '❌';
                 statusBox.innerHTML = `
                     系統載入中...<br>
                     <span style="font-size:12px;color:#666">
                         Progress: ${loadedCount} / ${totalFonts}<br>
-                        ${icon} ${fontName} ${success ? 'Ready' : 'Skipped'}
+                        ${icon} ${fontName} ${success ? 'Ready' : 'Failed'}
                     </span>
                 `;
-                if (loadedCount >= totalFonts) finishLoading();
+
+                if(loadedCount >= totalFonts) { 
+                    setTimeout(() => { 
+                        document.getElementById('loading-overlay').style.display = 'none'; 
+                        switchMode('world'); 
+                    }, 500); 
+                }
             };
 
-            // Per-font timeout：本地 TTF 8 秒沒回，跳 CDN；CDN 再 8 秒沒回，放棄該字體
-            const loadWithTimeout = (url, ms) => new Promise((resolve) => {
-                let settled = false;
-                const timer = setTimeout(() => {
-                    if (settled) return;
-                    settled = true;
-                    resolve({ err: new Error('timeout'), font: null });
-                }, ms);
-                try {
-                    opentype.load(url, function(err, font) {
-                        if (settled) return;
-                        settled = true;
-                        clearTimeout(timer);
-                        resolve({ err, font });
+            // 1. Plus Jakarta Sans
+            const pjsUrl1 = 'PlusJakartaSans-Bold.ttf';
+            const pjsUrl2 = 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff';
+            
+            opentype.load(pjsUrl1, function(err, font) { 
+                if (err) {
+                    // 本地失敗，嘗試 CDN
+                    opentype.load(pjsUrl2, function(err2, font2) {
+                        if(err2) updateStatus('PlusJakartaSans', false);
+                        else { fontWorld = font2; updateStatus('PlusJakartaSans (CDN)', true); }
                     });
-                } catch (e) {
-                    if (settled) return;
-                    settled = true;
-                    clearTimeout(timer);
-                    resolve({ err: e, font: null });
                 }
+                else { fontWorld = font; updateStatus('PlusJakartaSans', true); }
             });
 
-            // 1. Plus Jakarta Sans
-            (async () => {
-                const pjsUrl1 = 'PlusJakartaSans-Bold.ttf';
-                const pjsUrl2 = 'https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff';
-                const r1 = await loadWithTimeout(pjsUrl1, 8000);
-                if (!r1.err && r1.font) { fontWorld = r1.font; updateStatus('PlusJakartaSans', true); return; }
-                const r2 = await loadWithTimeout(pjsUrl2, 8000);
-                if (!r2.err && r2.font) { fontWorld = r2.font; updateStatus('PlusJakartaSans (CDN)', true); return; }
-                updateStatus('PlusJakartaSans', false);
-            })();
-
             // 2. Noto Sans TC
-            (async () => {
-                const notoUrl1 = 'NotoSansTC-Bold.ttf';
-                const notoUrl2 = 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-tc/files/noto-sans-tc-chinese-traditional-700-normal.woff';
-                const r1 = await loadWithTimeout(notoUrl1, 12000); // 6.8MB 給長一點
-                if (!r1.err && r1.font) { fontTwCh = r1.font; updateStatus('NotoSansTC', true); return; }
-                const r2 = await loadWithTimeout(notoUrl2, 8000);
-                if (!r2.err && r2.font) { fontTwCh = r2.font; updateStatus('NotoSansTC (CDN)', true); return; }
-                updateStatus('NotoSansTC', false);
-            })();
-
-            // Watchdog：總時限 25 秒，到時不論字體狀態強制放掉 overlay
-            setTimeout(() => {
-                if (finished) return;
-                if (!finishedFor.PlusJakartaSans) updateStatus('PlusJakartaSans (timeout)', false);
-                if (!finishedFor.NotoSansTC) updateStatus('NotoSansTC (timeout)', false);
-                finishLoading();
-            }, 25000);
+            const notoUrl1 = 'NotoSansTC-Bold.ttf';
+            const notoUrl2 = 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-tc/files/noto-sans-tc-chinese-traditional-700-normal.woff';
+            
+            opentype.load(notoUrl1, function(err, font) { 
+                if (err) {
+                    // 本地失敗，嘗試 CDN
+                    opentype.load(notoUrl2, function(err2, font2) {
+                        if(err2) updateStatus('NotoSansTC', false);
+                        else { fontTwCh = font2; updateStatus('NotoSansTC (CDN)', true); }
+                    });
+                } 
+                else { fontTwCh = font; updateStatus('NotoSansTC', true); }
+            });
         };
 
         // ----------------------------------------
